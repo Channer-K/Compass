@@ -1,0 +1,307 @@
+# -*- coding: utf-8 -*-
+import re
+import mptt
+
+from django.core.mail import send_mail
+from django.core import validators
+from django.db import models
+from django.utils.translation import ugettext_lazy as _
+from django.utils import timezone
+from django.contrib import auth
+from django.contrib.auth.models import (
+    Group, AbstractBaseUser, Permission,
+    BaseUserManager,
+    _user_has_module_perms, _user_get_all_permissions, _user_has_perm
+    )
+
+TASK_STATUS = (
+    (-2, u'审核失败'),
+    (-1, u'发布失败'),
+    (0, u'发布成功'),
+    (1, u'等待审核'),
+    (1, u'等待发布'),
+    (2, u'计划发布'),
+    (3, u'发布中'),
+    (4, u'等待确认'),
+)
+
+
+class Module(models.Model):
+    name = models.CharField(max_length=32)
+
+    def __unicode__(self):
+        return self.name
+
+
+# Inject some fields to auth.Group
+models.ForeignKey(
+    Group,
+    null=True, blank=True,
+    related_name='children',
+    verbose_name=_('parent'),
+    help_text=_('The group\'s parent group. None, if it is a root node.')
+    ).contribute_to_class(Group, 'parent')
+
+models.ManyToManyField(
+    Module,
+    verbose_name=_('modules')).contribute_to_class(Group, 'modules')
+
+mptt.register(Group)
+
+
+class Role(models.Model):
+    name = models.CharField(max_length=64)
+    group = models.ForeignKey(Group)
+
+    def __unicode__(self):
+        return self.name
+
+
+class MyPermissionsMixin(models.Model):
+    groups = models.ManyToManyField(
+        Group,
+        blank=True,
+        verbose_name=_('groups'),
+        help_text=_('Specific groups for this user.'),
+        related_name="user_set", related_query_name="user")
+    user_permissions = models.ManyToManyField(
+        Permission,
+        blank=True,
+        verbose_name=_('user permissions'),
+        help_text=_('Specific permissions for this user.'),
+        related_name="user_set", related_query_name="user")
+    roles = models.ManyToManyField(
+        Role,
+        blank=True,
+        verbose_name=_('user roles'),
+        help_text=_('Specific roles for this user.'),
+        related_name='user_set', related_query_name='user')
+
+    class Meta:
+        abstract = True
+
+    def get_group_permissions(self, obj=None):
+        permissions = set()
+        for backend in auth.get_backends():
+            if hasattr(backend, "get_group_permissions"):
+                permissions.update(backend.get_group_permissions(self, obj))
+        return permissions
+
+    def get_all_permissions(self, obj=None):
+        return _user_get_all_permissions(self, obj)
+
+    def has_perm(self, perm, obj=None):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        # Otherwise we need to check the backends.
+        return _user_has_perm(self, perm, obj)
+
+    def has_perms(self, perm_list, obj=None):
+        for perm in perm_list:
+            if not self.has_perm(perm, obj):
+                return False
+        return True
+
+    def has_module_perms(self, app_label):
+        # Active superusers have all permissions.
+        if self.is_active and self.is_superuser:
+            return True
+
+        return _user_has_module_perms(self, app_label)
+
+
+class MyUserManager(BaseUserManager):
+    def _create_user(self, username, email, password, role, group,
+                     **extra_fields):
+        """
+        Creates and saves a User with the given username, email and password.
+        """
+        now = timezone.now()
+        if not username:
+            raise ValueError('The given username must be set')
+        email = MyUserManager.normalize_email(email)
+        user = self.model(username=username, email=email,
+                          role=role, group=group,
+                          last_login=now, date_joined=now, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+        return user
+
+    def create_user(self, username, email, password=None, **extra_fields):
+        return self._create_user(username, email, password, None, None,
+                                 **extra_fields)
+
+    def create_superuser(self, username, email, password, **extra_fields):
+        admin_group = Group.objects.get_or_create(name='administrator')[0]
+        admin_role = Role.objects.get_or_create(name='administrator',
+                                                group=admin_group)
+        return self._create_user(username, email, password,
+                                 admin_role, admin_group,
+                                 **extra_fields)
+
+
+class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
+    username = models.CharField(
+        _('username'), max_length=30, unique=True,
+        help_text=_('Required. 30 characters or fewer. Letters, numbers and '
+                    '@/./+/-/_ characters'),
+        validators=[validators.RegexValidator(
+            re.compile('^[\w.@+-]+$'),
+            _('Enter a valid username.'), 'invalid')
+        ])
+    first_name = models.CharField(_('first name'), max_length=30, blank=True)
+    last_name = models.CharField(_('last name'), max_length=30, blank=True)
+    email = models.EmailField(_('email address'))
+    is_staff = models.BooleanField(
+        _('staff status'), default=False,
+        help_text=_('Designates whether the user can log into this admin '
+                    'site.'))
+    is_active = models.BooleanField(
+        _('active'), default=True,
+        help_text=_('Designates whether this user should be treated as '
+                    'active. Unselect this instead of deleting accounts.'))
+    at_work = models.BooleanField(
+        _('work status'), default=False,
+        help_text=_('User will not receive any tasks when is True'))
+    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+
+    objects = MyUserManager()
+
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
+
+    class Meta:
+        verbose_name = _('user')
+        verbose_name_plural = _('users')
+        abstract = True
+
+    def __unicode__(self):
+        return self.username
+
+    def get_full_name(self):
+        full_name = '%s %s' % (self.first_name, self.last_name)
+        return full_name.strip()
+
+    def get_short_name(self):
+        return self.first_name
+
+    def email_user(self, subject, message, from_email=None):
+        """ Sends an email to this User. """
+        send_mail(subject, message, from_email, [self.email])
+
+    def get_all_groups(self):
+        direct_groups = self.groups.all()
+        groups = set()
+
+        for group in direct_groups:
+            ancestors = group.get_ancestors().all()
+            for anc in ancestors:
+                groups.add(anc)
+            groups.add(group)
+
+        return groups
+
+    def get_rest(self):
+        pass
+
+    def get_work(self):
+        pass
+
+    def delegate(self, permission, to):
+        pass
+
+    @property
+    def is_superuser(self):
+        if self.role.name == 'administrator':
+            return True
+        return False
+
+
+class User(MyAbstractUser):
+    class Meta(MyAbstractUser.Meta):
+        swappable = 'AUTH_USER_MODEL'
+
+
+class Place(models.Model):
+    name = models.CharField(max_length=64)
+    prefix = models.ForeignKey('self', blank=True, null=True,
+                               related_name='after')
+
+    def __unicode__(self):
+        return self.name
+
+
+class ServerGroup(models.Model):
+    name = models.CharField(max_length=32)
+    place = models.ForeignKey(Place)
+    comment = models.CharField(max_length=128, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'<%s -- %s>' % (self.name, self.place)
+
+
+class Server(models.Model):
+    hostname = models.CharField(_('Host name'), max_length=64)
+    ip = models.IPAddressField()
+    groups = models.ManyToManyField(
+        ServerGroup,
+        verbose_name=_('groups'),
+        help_text=_('The groups server belongs to'))
+    is_active = models.BooleanField(default=True)
+    comment = models.CharField(max_length=128, null=True, blank=True)
+
+    def __unicode__(self):
+        return u'%s -- %s' % (self.hostname, self.ip)
+
+
+class Task(models.Model):
+    applicant = models.ForeignKey(User)
+    version = models.CharField(max_length=32)
+    modules = models.ManyToManyField(
+        Module,
+        verbose_name=_('modules'),
+        help_text=_('The modules will be updated in this task.'))
+    created_at = models.DateTimeField(default=timezone.now)
+    pub_date = models.DateTimeField(blank=True, null=True)
+    pub_cycle = models.ForeignKey(Place)
+    accept_group = models.ForeignKey(Group)
+    comment = models.TextField()
+    status = models.SmallIntegerField(max_length=2,
+                                      help_text=_('Task status.'),
+                                      choices=TASK_STATUS)
+
+
+class Package(models.Model):
+    filename = models.CharField(max_length=64)
+    path = models.CharField(max_length=256)
+    authors = models.ManyToManyField(
+        User,
+        verbose_name=_('authors'),
+        help_text=_('The users who create this Package.'))
+    task = models.ForeignKey(Task, blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    is_published = models.BooleanField(_('publish status'), default=False)
+    comment = models.TextField(help_text=_('Change log here.'))
+
+    class Meta:
+        verbose_name = _('Package')
+        verbose_name_plural = _('Packages')
+
+    def __unicode__(self):
+        return u'%s -- %s' % (
+            ', '.join([author.username for author in self.authors()]),
+            self.filename)
+
+
+class Reply(models.Model):
+    task = models.ForeignKey(Task)
+    user = models.ForeignKey(User)
+    content = models.TextField()
+    rep_date = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = _('Reply')
+        verbose_name_plural = _('Replies')
+        ordering = ('rep_date',)
