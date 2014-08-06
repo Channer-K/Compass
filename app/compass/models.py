@@ -123,10 +123,11 @@ class MyUserManager(BaseUserManager):
             raise ValueError('The given username must be set')
         email = MyUserManager.normalize_email(email)
         user = self.model(username=username, email=email,
-                          role=role, group=group,
                           last_login=now, date_joined=now, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
+        user.roles.add(role)
+        user.groups.add(group)
         return user
 
     def create_user(self, username, email, password=None, **extra_fields):
@@ -136,7 +137,7 @@ class MyUserManager(BaseUserManager):
     def create_superuser(self, username, email, password, **extra_fields):
         admin_group = Group.objects.get_or_create(name='administrator')[0]
         admin_role = Role.objects.get_or_create(name='administrator',
-                                                group=admin_group)
+                                                group=admin_group)[0]
         return self._create_user(username, email, password,
                                  admin_role, admin_group,
                                  **extra_fields)
@@ -154,10 +155,6 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     email = models.EmailField(_('email address'))
-    is_staff = models.BooleanField(
-        _('staff status'), default=False,
-        help_text=_('Designates whether the user can log into this admin '
-                    'site.'))
     is_active = models.BooleanField(
         _('active'), default=True,
         help_text=_('Designates whether this user should be treated as '
@@ -214,9 +211,13 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
     @property
     def is_superuser(self):
-        if self.role.name == 'administrator':
+        if self.roles.filter(name='administrator'):
             return True
         return False
+
+    @property
+    def is_staff(self):
+        return self.is_superuser
 
 
 class User(MyAbstractUser):

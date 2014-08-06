@@ -60,7 +60,7 @@ class MyUserAdmin(UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Permissions'), {
-            'fields': ('is_active', 'is_staff', 'is_superuser', 'groups')
+            'fields': ('is_active', 'groups', 'roles', 'user_permissions')
             }),
         (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
     )
@@ -70,8 +70,10 @@ class MyUserAdmin(UserAdmin):
     )
     list_display = ('username', 'email', 'first_name', 'last_name',
                     'in_groups', 'is_staff')
+    list_filter = ('is_active', 'groups')
 
     readonly_fields = ('date_joined', 'last_login',)
+    filter_horizontal = ('groups', 'roles', 'user_permissions',)
 
     form = UserChangeForm
     add_form = UserCreationForm
