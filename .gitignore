@@ -12,3 +12,5 @@ Thumbs.db
 app/app/settings.py
 app/app/settings.pyc
 venv/
+
+*.pyc
