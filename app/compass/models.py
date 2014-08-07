@@ -9,10 +9,7 @@ from django.utils.translation import ugettext_lazy as _
 from django.utils import timezone
 from django.contrib import auth
 from django.contrib.auth.models import (
-    Group, AbstractBaseUser, Permission,
-    BaseUserManager,
-    _user_has_module_perms, _user_get_all_permissions, _user_has_perm
-    )
+    Group, AbstractBaseUser, Permission, BaseUserManager,)
 
 TASK_STATUS = (
     (-2, u'审核失败'),
@@ -24,6 +21,31 @@ TASK_STATUS = (
     (3, u'发布中'),
     (4, u'等待确认'),
 )
+
+
+# A few helper functions for common logic between User and AnonymousUser.
+def _user_get_all_permissions(user, obj):
+    permissions = set()
+    for backend in auth.get_backends():
+        if hasattr(backend, "get_all_permissions"):
+            permissions.update(backend.get_all_permissions(user, obj))
+    return permissions
+
+
+def _user_has_perm(user, perm, obj):
+    for backend in auth.get_backends():
+        if hasattr(backend, "has_perm"):
+            if backend.has_perm(user, perm, obj):
+                return True
+    return False
+
+
+def _user_has_module_perms(user, app_label):
+    for backend in auth.get_backends():
+        if hasattr(backend, "has_module_perms"):
+            if backend.has_module_perms(user, app_label):
+                return True
+    return False
 
 
 class Module(models.Model):
@@ -44,6 +66,7 @@ models.ForeignKey(
 
 models.ManyToManyField(
     Module,
+    null=True, blank=True,
     verbose_name=_('modules')).contribute_to_class(Group, 'modules')
 
 mptt.register(Group)
@@ -52,6 +75,12 @@ mptt.register(Group)
 class Role(models.Model):
     name = models.CharField(max_length=64)
     group = models.ForeignKey(Group)
+    permissions = models.ManyToManyField(
+        Permission, blank=True,
+        verbose_name=_('permissions'))
+
+    class Meta:
+        pass
 
     def __unicode__(self):
         return self.name
@@ -87,7 +116,11 @@ class MyPermissionsMixin(models.Model):
                 permissions.update(backend.get_group_permissions(self, obj))
         return permissions
 
+    def get_role_permissions(self, obj=None):
+        pass
+
     def get_all_permissions(self, obj=None):
+        # group permissions and role permissions
         return _user_get_all_permissions(self, obj)
 
     def has_perm(self, perm, obj=None):
@@ -160,7 +193,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         help_text=_('Designates whether this user should be treated as '
                     'active. Unselect this instead of deleting accounts.'))
     at_work = models.BooleanField(
-        _('work status'), default=False,
+        _('work status'), default=True,
         help_text=_('User will not receive any tasks when is True'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
 
@@ -173,6 +206,9 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         verbose_name = _('user')
         verbose_name_plural = _('users')
         abstract = True
+        permissions = (
+            ('can_view_users', 'Can view users'),
+            )
 
     def __unicode__(self):
         return self.username
@@ -200,11 +236,17 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
         return groups
 
-    def get_rest(self):
-        pass
+    def offline(self):
+        if self.at_work:
+            self.at_work = False
+            return True
+        return False
 
-    def get_work(self):
-        pass
+    def online(self):
+        if not self.at_work:
+            self.at_work = True
+            return True
+        return False
 
     def delegate(self, permission, to):
         pass
@@ -238,6 +280,12 @@ class ServerGroup(models.Model):
     name = models.CharField(max_length=32)
     place = models.ForeignKey(Place)
     comment = models.CharField(max_length=128, null=True, blank=True)
+    groups = models.ManyToManyField(Group, verbose_name=_('user groups'))
+
+    class Meta:
+        permissions = (
+            ('can_view_server_group', 'Can view ServerGroup'),
+            )
 
     def __unicode__(self):
         return u'<%s -- %s>' % (self.name, self.place)
@@ -248,8 +296,8 @@ class Server(models.Model):
     ip = models.IPAddressField()
     groups = models.ManyToManyField(
         ServerGroup,
-        verbose_name=_('groups'),
-        help_text=_('The groups server belongs to'))
+        verbose_name=_('server groups'),
+        help_text=_('Which groups server belongs to'))
     is_active = models.BooleanField(default=True)
     comment = models.CharField(max_length=128, null=True, blank=True)
 
@@ -267,33 +315,45 @@ class Task(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     pub_date = models.DateTimeField(blank=True, null=True)
     pub_cycle = models.ForeignKey(Place)
-    accept_group = models.ForeignKey(Group)
-    comment = models.TextField()
+    accept_group = models.ForeignKey(Group, blank=True, null=True)
+    comment = models.TextField(blank=True, null=True)
     status = models.SmallIntegerField(max_length=2,
+                                      blank=True, null=True,
                                       help_text=_('Task status.'),
                                       choices=TASK_STATUS)
+
+    class Meta:
+        ordering = ('-created_at',)
+        permissions = (
+            ("view_task", "Can see available tasks"),
+            ("change_task_status", "Can change the status of tasks"),
+            ("close_task", "Can enforce a task to be closed"))
+
+    def __unicode__(self):
+        return u'%s %s' % (
+            ", ".join([p.name for p in self.modules.all()]),
+            self.created_at)
 
 
 class Package(models.Model):
     filename = models.CharField(max_length=64)
     path = models.CharField(max_length=256)
-    authors = models.ManyToManyField(
-        User,
-        verbose_name=_('authors'),
-        help_text=_('The users who create this Package.'))
+    authors = models.CharField(
+        max_length=64, verbose_name=_('authors'),
+        help_text=_('The authors of package. '
+                    'Multiple authors are separated with comma.'))
     task = models.ForeignKey(Task, blank=True, null=True)
     created_at = models.DateTimeField(default=timezone.now)
     is_published = models.BooleanField(_('publish status'), default=False)
-    comment = models.TextField(help_text=_('Change log here.'))
+    comment = models.TextField(blank=True, null=True,
+                               help_text=_('Change log here.'))
 
     class Meta:
         verbose_name = _('Package')
         verbose_name_plural = _('Packages')
 
     def __unicode__(self):
-        return u'%s -- %s' % (
-            ', '.join([author.username for author in self.authors()]),
-            self.filename)
+        return u'%s -- %s' % (self.authors, self.filename)
 
 
 class Reply(models.Model):

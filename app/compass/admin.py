@@ -100,6 +100,39 @@ class ServerAdmin(admin.ModelAdmin):
 class ServerGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'place', 'comment')
 
+
+class PackageInline(admin.TabularInline):
+    fk_name = 'task'
+    fields = ('filename', 'path', 'authors', 'comment',)
+    exclude = ('created_at', 'is_published',)
+    model = models.Package
+    extra = 1
+
+
+class TaskAdmin(admin.ModelAdmin):
+    list_display = ('applicant', 'modules_list', 'version', 'created_at',)
+    fields = ('version', 'modules', 'pub_cycle', 'comment',)
+    filter_horizontal = ('modules',)
+    readonly_fields = ('applicant',)
+    inlines = [PackageInline]
+
+    def get_form(self, request, obj=None, **kwargs):
+        # Proper kwargs are form, fields, exclude, formfield_callback
+        if obj:
+            pass
+        else:
+            kwargs['exclude'] = ['accept_group']
+
+        return super(TaskAdmin, self).get_form(request, obj, **kwargs)
+
+    def save_model(self, request, obj, form, change):
+        obj.applicant = request.user
+        obj.save()
+
+    def modules_list(self, obj):
+        return ", ".join([p.name for p in obj.modules.all()])
+
+
 admin.site.unregister(Group)
 admin.site.register(models.User, MyUserAdmin)
 admin.site.register(Group, MyGroupAdmin)
@@ -108,3 +141,4 @@ admin.site.register(models.Place)
 admin.site.register(models.ServerGroup, ServerGroupAdmin)
 admin.site.register(models.Module)
 admin.site.register(models.Role, RoleAdmin)
+admin.site.register(models.Task, TaskAdmin)
