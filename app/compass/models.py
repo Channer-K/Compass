@@ -74,6 +74,8 @@ mptt.register(Group)
 
 class Role(models.Model):
     name = models.CharField(max_length=64)
+    report_to = models.ForeignKey('self', blank=True, null=True,
+                                  verbose_name=_('Report object'))
     group = models.ForeignKey(Group)
     permissions = models.ManyToManyField(
         Permission, blank=True,
@@ -117,7 +119,11 @@ class MyPermissionsMixin(models.Model):
         return permissions
 
     def get_role_permissions(self, obj=None):
-        pass
+        permissions = set()
+        for backend in auth.get_backends():
+            if hasattr(backend, "get_role_permissions"):
+                permissions.update(backend.get_role_permissions(self, obj))
+        return permissions
 
     def get_all_permissions(self, obj=None):
         # group permissions and role permissions
@@ -146,8 +152,7 @@ class MyPermissionsMixin(models.Model):
 
 
 class MyUserManager(BaseUserManager):
-    def _create_user(self, username, email, password, role, group,
-                     **extra_fields):
+    def _create_user(self, username, email, password, **extra_fields):
         """
         Creates and saves a User with the given username, email and password.
         """
@@ -156,24 +161,22 @@ class MyUserManager(BaseUserManager):
             raise ValueError('The given username must be set')
         email = MyUserManager.normalize_email(email)
         user = self.model(username=username, email=email,
-                          last_login=now, date_joined=now, **extra_fields)
+                          last_login=now, created_at=now, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
-        user.roles.add(role)
-        user.groups.add(group)
         return user
 
     def create_user(self, username, email, password=None, **extra_fields):
-        return self._create_user(username, email, password, None, None,
-                                 **extra_fields)
+        return self._create_user(username, email, password, **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
         admin_group = Group.objects.get_or_create(name='administrator')[0]
         admin_role = Role.objects.get_or_create(name='administrator',
                                                 group=admin_group)[0]
-        return self._create_user(username, email, password,
-                                 admin_role, admin_group,
-                                 **extra_fields)
+        admin = self._create_user(username, email, password, **extra_fields)
+        admin.roles.add(admin_role)
+        admin.groups.add(admin_group)
+        return admin
 
 
 class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
@@ -195,7 +198,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     at_work = models.BooleanField(
         _('work status'), default=True,
         help_text=_('User will not receive any tasks when is True'))
-    date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
+    created_at = models.DateTimeField(_('date joined'), default=timezone.now)
 
     objects = MyUserManager()
 
@@ -237,23 +240,17 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         return groups
 
     def offline(self):
-        if self.at_work:
-            self.at_work = False
-            return True
-        return False
+        self.at_work = False
+        self.save(update_fields=['at_work'])
 
     def online(self):
-        if not self.at_work:
-            self.at_work = True
-            return True
-        return False
-
-    def delegate(self, permission, to):
-        pass
+        self.at_work = True
+        self.save(update_fields=['at_work'])
 
     @property
     def is_superuser(self):
-        if self.roles.filter(name='administrator'):
+        if self.roles.filter(name='administrator') or \
+           self.groups.filter(name='administrator'):
             return True
         return False
 
@@ -267,10 +264,8 @@ class User(MyAbstractUser):
         swappable = 'AUTH_USER_MODEL'
 
 
-class Place(models.Model):
+class Environment(models.Model):
     name = models.CharField(max_length=64)
-    prefix = models.ForeignKey('self', blank=True, null=True,
-                               related_name='after')
 
     def __unicode__(self):
         return self.name
@@ -278,7 +273,7 @@ class Place(models.Model):
 
 class ServerGroup(models.Model):
     name = models.CharField(max_length=32)
-    place = models.ForeignKey(Place)
+    environment = models.ForeignKey(Environment)
     comment = models.CharField(max_length=128, null=True, blank=True)
     groups = models.ManyToManyField(Group, verbose_name=_('user groups'))
 
@@ -288,7 +283,7 @@ class ServerGroup(models.Model):
             )
 
     def __unicode__(self):
-        return u'<%s -- %s>' % (self.name, self.place)
+        return u'<%s -- %s>' % (self.name, self.environment)
 
 
 class Server(models.Model):
@@ -297,12 +292,20 @@ class Server(models.Model):
     groups = models.ManyToManyField(
         ServerGroup,
         verbose_name=_('server groups'),
-        help_text=_('Which groups server belongs to'))
+        help_text=_('Which groups server in.'))
     is_active = models.BooleanField(default=True)
     comment = models.CharField(max_length=128, null=True, blank=True)
 
     def __unicode__(self):
         return u'%s -- %s' % (self.hostname, self.ip)
+
+    def offline(self):
+        self.is_active = False
+        self.save(update_fields=['is_active'])
+
+    def online(self):
+        self.is_active = True
+        self.save(update_fields=['is_active'])
 
 
 class Task(models.Model):
@@ -313,14 +316,7 @@ class Task(models.Model):
         verbose_name=_('modules'),
         help_text=_('The modules will be updated in this task.'))
     created_at = models.DateTimeField(default=timezone.now)
-    pub_date = models.DateTimeField(blank=True, null=True)
-    pub_cycle = models.ForeignKey(Place)
-    accept_group = models.ForeignKey(Group, blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
-    status = models.SmallIntegerField(max_length=2,
-                                      blank=True, null=True,
-                                      help_text=_('Task status.'),
-                                      choices=TASK_STATUS)
 
     class Meta:
         ordering = ('-created_at',)
@@ -333,6 +329,20 @@ class Task(models.Model):
         return u'%s %s' % (
             ", ".join([p.name for p in self.modules.all()]),
             self.created_at)
+
+
+class Distribution(models.Model):
+    task = models.ForeignKey(Task)
+    pub_date = models.DateTimeField(blank=True, null=True)
+    environment = models.ForeignKey(Environment)
+    updated_at = models.DateTimeField(auto_now=True)
+    status = models.SmallIntegerField(max_length=2, blank=True, null=True,
+                                      help_text=_('Task status'))
+
+
+class Release(models.Model):
+    task = models.ForeignKey(Task)
+    releaser = models.ForeignKey(User)
 
 
 class Package(models.Model):
@@ -348,21 +358,23 @@ class Package(models.Model):
     comment = models.TextField(blank=True, null=True,
                                help_text=_('Change log here.'))
 
-    class Meta:
-        verbose_name = _('Package')
-        verbose_name_plural = _('Packages')
-
     def __unicode__(self):
         return u'%s -- %s' % (self.authors, self.filename)
 
 
 class Reply(models.Model):
-    task = models.ForeignKey(Task)
+    subtask = models.ForeignKey(Distribution)
     user = models.ForeignKey(User)
     content = models.TextField()
-    rep_date = models.DateTimeField(default=timezone.now)
+    created_at = models.DateTimeField(default=timezone.now)
 
     class Meta:
         verbose_name = _('Reply')
         verbose_name_plural = _('Replies')
-        ordering = ('rep_date',)
+        ordering = ('created_at',)
+
+
+class Attachment(models.Model):
+    reply = models.ForeignKey(Reply)
+    upload = models.FileField(upload_to='%Y/%m/%d')
+    created_at = models.DateTimeField(default=timezone.now)

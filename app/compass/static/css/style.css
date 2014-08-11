@@ -1,0 +1,103 @@
+html {
+  position: relative;
+  min-height: 100%;
+  background: #F6f6F6 url("../images/base.png") repeat 0 0;
+}
+
+body {
+  height: 100%;
+  font-family: sans-serif;
+  color: #000;
+  background: #F6f6F6 url("../images/base.png") repeat 0 0;
+}
+
+#sign-div {
+    display:inline-block;
+    margin-top: 80px;
+    float: right;
+}
+
+#container-div {
+    display: inherit;
+    width: 460px;
+    border-radius: 15px;
+    -moz-box-shadow:0px 0px 8px #999;
+    -webkit-box-shadow:0px 0px 8px #999;
+    box-shadow: 0px 0px 8px #999;
+}
+
+.sign-header {
+    display: inherit;
+    background-color: #42A3F4;
+    padding-top: 15px;
+    padding-bottom: 10px;
+    border-radius: 15px 15px 0 0;
+}
+
+.sign-header p,
+.sign-header span {
+    display: inherit;
+    margin: 5px auto;
+    font-size: 30px;
+    text-align: center;
+    color: #fff;
+    line-height: 1.7em;
+}
+
+.errorlist {
+  font-size: 75%;
+  line-height: 1.3em;
+}
+
+.sign-content {
+    height: 348px;
+    padding: 10px 45px 20px 45px;
+    background-color: #7D7D7D;
+    border-radius: 0 0 15px 15px;
+}
+
+.sign-form {
+  margin-top: 15px;
+}
+
+.mybox {
+    color: #fff;
+}
+
+.mybtn {
+    margin-top: 15px;
+    width: 370px;
+    background-color: #42A3F4;
+    height: 42px;
+    font-size: 20px;
+}
+
+.sign-forget {
+    margin-top: 10px;
+    margin-bottom: 10px;
+    color: #fff;
+}
+
+.sign-forget p {
+  text-align: right;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.sign-forget a {
+    color: #42A3F4;
+}
+
+#footer {
+  padding: auto 10px;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  /* Set the fixed height of the footer here */
+  height: 60px;
+  background: #4A4A4A url("../images/footer.png") repeat-x 0 0;
+}
+
+#footer .container {
+  margin-top: 24px;
+}

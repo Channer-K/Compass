@@ -7,7 +7,6 @@ class MyModelBackend(object):
     """
     Authenticates against settings.AUTH_USER_MODEL.
     """
-
     def authenticate(self, username=None, password=None, **kwargs):
         UserModel = get_user_model()
         if username is None:

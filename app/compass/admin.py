@@ -62,7 +62,7 @@ class MyUserAdmin(UserAdmin):
         (_('Permissions'), {
             'fields': ('is_active', 'groups', 'roles', 'user_permissions')
             }),
-        (_('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (_('Important dates'), {'fields': ('last_login', 'created_at')}),
     )
     add_fieldsets = (
         (None, {'classes': ('wide',),
@@ -72,7 +72,7 @@ class MyUserAdmin(UserAdmin):
                     'in_groups', 'is_staff')
     list_filter = ('is_active', 'groups')
 
-    readonly_fields = ('date_joined', 'last_login',)
+    readonly_fields = ('created_at', 'last_login',)
     filter_horizontal = ('groups', 'roles', 'user_permissions',)
 
     form = UserChangeForm
@@ -98,7 +98,7 @@ class ServerAdmin(admin.ModelAdmin):
 
 
 class ServerGroupAdmin(admin.ModelAdmin):
-    list_display = ('name', 'place', 'comment')
+    list_display = ('name', 'environment', 'comment')
 
 
 class PackageInline(admin.TabularInline):
@@ -109,9 +109,18 @@ class PackageInline(admin.TabularInline):
     extra = 1
 
 
+class TaskForm(forms.ModelForm):
+    environment = forms.ModelMultipleChoiceField(
+        widget=forms.CheckboxSelectMultiple,
+        queryset=models.Environment.objects.all())
+
+    class Meta:
+        model = models.Task
+
+
 class TaskAdmin(admin.ModelAdmin):
+    form = TaskForm
     list_display = ('applicant', 'modules_list', 'version', 'created_at',)
-    fields = ('version', 'modules', 'pub_cycle', 'comment',)
     filter_horizontal = ('modules',)
     readonly_fields = ('applicant',)
     inlines = [PackageInline]
@@ -137,7 +146,7 @@ admin.site.unregister(Group)
 admin.site.register(models.User, MyUserAdmin)
 admin.site.register(Group, MyGroupAdmin)
 admin.site.register(models.Server, ServerAdmin)
-admin.site.register(models.Place)
+admin.site.register(models.Environment)
 admin.site.register(models.ServerGroup, ServerGroupAdmin)
 admin.site.register(models.Module)
 admin.site.register(models.Role, RoleAdmin)
