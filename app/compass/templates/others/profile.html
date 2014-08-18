@@ -104,7 +104,7 @@
 </div>
 <script>
 $(function(){
-  $('#id_work_status').change(function(){
+  $('#id_work_status').on('change', function() {
     if($(this).parent().hasClass("switch-on")){
       $.post('{% url 'set-offline' user.id %}', function(e){
         if(e.status == 'ok'){

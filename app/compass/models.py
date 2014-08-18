@@ -395,6 +395,10 @@ class Package(models.Model):
     def __unicode__(self):
         return u'%s -- %s' % (self.authors, self.filename)
 
+    def get_absolute_path(self):
+        absolute_path = '%s/%s' % (self.path, self.filename)
+        return absolute_path.strip()
+
 
 class Reply(models.Model):
     subtask = models.ForeignKey(Subtask)

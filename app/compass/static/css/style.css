@@ -369,7 +369,7 @@ span.h3 { font-size: 24px; display: block; }
 .reply .wrap-reply { border-bottom: 1px dashed #ddd; }
 .reply .last { border-bottom: 0px; margin-bottom: 15px; }
 .reply .wrap-reply .row { padding-left: 15px; }
-.reply .wrap-reply h6 { float: left; }
+.reply .wrap-reply h5 { float: left; }
 .reply .wrap-reply a { float: right; }
 .reply .wrap-reply .comment { 
   border-left: 5px solid #ddd;
