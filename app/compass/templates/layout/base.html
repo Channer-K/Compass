@@ -1,16 +1,28 @@
 {% include 'layout/header.html' %}
-<div id="wrap">
-{% if messages %}
-  {% for message in messages %}
-    <div class="alert alert-{{ message.tags }} alert-dismissible fade in" role="alert">
-      <button type="button" class="close" data-dismiss="alert"><span aria-hidden="true">×</span><span class="sr-only">Close</span></button>
-      <strong>{{ message }}</strong>
-    </div>
-  {% endfor %}
-{% endif %}
+<div class="container">
   <div id="goTop"></div>
-  <div class="container">
-    {% block content %}{% endblock %}
-  </div> <!-- container-fluid -->
-</div> <!-- wrap id -->
+  <!-- navbar here -->
+  {% include 'layout/navbar.html' %}
+  <div class="container-fluid">
+    <div class="row">
+      {% block sidebar %}{% endblock %}
+      <div class="main">
+        {% if messages %}
+          <!-- alert messages -->
+          {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert">
+                <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+              </button>
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+
+        <!-- content here -->
+        {% block content %}{% endblock %}
+      </div>
+    </div>
+  </div><!-- container-fluid -->
+</div>
 {% include 'layout/footer.html' %}

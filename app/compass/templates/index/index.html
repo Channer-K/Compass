@@ -1,0 +1,20 @@
+{% extends "layout/base.html" %}
+{% block sidebar %}
+<div class="col-sm-3 col-md-2 sidebar">
+  <ul class="nav nav-sidebar">
+    <li class="active"><a href="{% url 'index' %}">Overview</a></li>
+    <li><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+  </ul>
+</div>
+{% endblock %}
+{% block content %}
+<h1 class="page-header">Overview</h1>
+<div class="contentwrapper">
+  <div class="col-md-8">
+    {% include 'index/left.html' %}
+  </div>
+  <div class="col-md-4">
+    {% include 'index/right.html' %}
+  </div>
+</div>
+{% endblock %}

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import warnings
+from compass.models import *
 from django import forms
 from django.utils.text import capfirst
 from django.contrib.auth import authenticate, get_user_model
@@ -72,4 +73,105 @@ class SigninForm(forms.Form):
 
 class UploadFileForm(forms.Form):
     title = forms.CharField(max_length=50)
-    file = forms.FileField()
+    uploaded_file = forms.FileField()
+
+
+class FilterForm(forms.Form):
+    from_date = forms.DateField(label=u'开始时间', input_formats=['%Y-%m-%d'])
+    to_date = forms.DateField(label=u'结束时间', input_formats=['%Y-%m-%d'])
+    modules = forms.MultipleChoiceField(label=u'发布模块', choices=[],
+                                        widget=forms.CheckboxSelectMultiple())
+    status = forms.MultipleChoiceField(
+        label=u'任务状态',
+        choices=[(1, u'等待审核'), (2, u'等待发布'), (3, u'发布中')],
+        widget=forms.CheckboxSelectMultiple())
+
+    def __init__(self, user=None, *args, **kwargs):
+        super(FilterForm, self).__init__(*args, **kwargs)
+
+        if user is not None:
+            UserModel = get_user_model()
+            self.user = UserModel._default_manager.get(username=user)
+            self.fields['modules'].choices = self.user.all_modules_choices()
+
+
+class ProfileForm(forms.Form):
+    error_messages = {
+        'password_incorrect': _("Your old password was entered incorrectly. "
+                                "Please enter it again."),
+        'password_mismatch': _("The two password fields didn't match."),
+    }
+    first_name = forms.CharField(
+        required=False, label=u'First name', max_length=30,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+        )
+    last_name = forms.CharField(
+        required=False, label=u'Last name', max_length=30,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+        )
+    email = forms.EmailField(
+        label=u"Email", max_length=254,
+        widget=forms.EmailInput(attrs={'class': 'form-control'}))
+
+    old_password = forms.CharField(required=False,
+                                   label=_("Old password"),
+                                   widget=forms.PasswordInput)
+    new_password1 = forms.CharField(required=False,
+                                    label=_("New password"),
+                                    widget=forms.PasswordInput)
+    new_password2 = forms.CharField(required=False,
+                                    label=_("New password confirmation"),
+                                    widget=forms.PasswordInput)
+
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super(ProfileForm, self).__init__(*args, **kwargs)
+
+    def clean_old_password(self):
+        """
+        Validates that the old_password field is correct.
+        """
+        old_password = self.cleaned_data["old_password"]
+        if not self.user.check_password(old_password) and old_password:
+            raise forms.ValidationError(
+                self.error_messages['password_incorrect'],
+                code='password_incorrect',
+            )
+        return old_password
+
+    def clean_new_password2(self):
+        password1 = self.cleaned_data.get('new_password1')
+        password2 = self.cleaned_data.get('new_password2')
+        if password1 and password2:
+            if password1 != password2:
+                raise forms.ValidationError(
+                    self.error_messages['password_mismatch'],
+                    code='password_mismatch',
+                )
+        return password2
+
+    def clean_email(self):
+        email = self.cleaned_data['email']
+        if "@pset.suntec.net" not in email:
+            raise forms.ValidationError(
+                "Email address must end with @pset.suntec.net")
+        return email
+
+    def save(self, commit=True):
+        update_fields = []
+        if self.cleaned_data["old_password"]:
+            self.user.set_password(self.cleaned_data["new_password1"])
+            update_fields.append('password')
+        if commit:
+            if self.user.first_name != self.cleaned_data["first_name"]:
+                self.user.first_name = self.cleaned_data["first_name"]
+                update_fields.append('first_name')
+            if self.user.last_name != self.cleaned_data["last_name"]:
+                self.user.last_name = self.cleaned_data["last_name"]
+                update_fields.append('last_name')
+            if self.user.email != self.cleaned_data["email"]:
+                self.user.email = self.cleaned_data["email"]
+                update_fields.append('email')
+
+            self.user.save(update_fields=update_fields)
+        return self.user

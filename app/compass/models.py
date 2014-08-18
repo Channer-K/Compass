@@ -17,9 +17,8 @@ TASK_STATUS = (
     (0, u'发布成功'),
     (1, u'等待审核'),
     (1, u'等待发布'),
-    (2, u'计划发布'),
-    (3, u'发布中'),
-    (4, u'等待确认'),
+    (2, u'发布中'),
+    (3, u'等待确认'),
 )
 
 
@@ -80,9 +79,6 @@ class Role(models.Model):
     permissions = models.ManyToManyField(
         Permission, blank=True,
         verbose_name=_('permissions'))
-
-    class Meta:
-        pass
 
     def __unicode__(self):
         return self.name
@@ -197,8 +193,8 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
                     'active. Unselect this instead of deleting accounts.'))
     at_work = models.BooleanField(
         _('work status'), default=True,
-        help_text=_('User will not receive any tasks when is True'))
-    created_at = models.DateTimeField(_('date joined'), default=timezone.now)
+        help_text=_('You won\'t receive any tasks when is checked.'))
+    created_at = models.DateTimeField(_('date joined'), auto_now_add=True)
 
     objects = MyUserManager()
 
@@ -239,6 +235,26 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
         return groups
 
+    def get_all_roles(self):
+        roles = set()
+
+        for role in self.roles.all():
+            roles.add(role)
+
+        return roles
+
+    def all_modules_choices(self):
+        groups = self.groups.all()
+        modules = set()
+
+        for group in groups:
+            for module in group.modules.all().values_list('id', 'name'):
+                modules.add(module)
+
+        modules_sorted = list(modules)
+        modules_sorted.sort()
+        return modules_sorted
+
     def offline(self):
         self.at_work = False
         self.save(update_fields=['at_work'])
@@ -246,6 +262,22 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     def online(self):
         self.at_work = True
         self.save(update_fields=['at_work'])
+
+    def offline_in_group(self):
+        offline_user = set()
+        for group in self.groups.all():
+            for user in group.user_set.all():
+                if not user.at_work:
+                    offline_user.add(user.username)
+        return (" ").join(offline_user)
+
+    def online_in_group(self):
+        online_user = set()
+        for group in self.groups.all():
+            for user in group.user_set.all():
+                if user.at_work:
+                    online_user.add(user.username)
+        return (" ").join(online_user)
 
     @property
     def is_superuser(self):
@@ -316,6 +348,8 @@ class Task(models.Model):
         verbose_name=_('modules'),
         help_text=_('The modules will be updated in this task.'))
     created_at = models.DateTimeField(default=timezone.now)
+    cause = models.CharField(max_length=128)
+    explanation = models.CharField(max_length=128, blank=True, null=True)
     comment = models.TextField(blank=True, null=True)
 
     class Meta:
@@ -326,23 +360,23 @@ class Task(models.Model):
             ("close_task", "Can enforce a task to be closed"))
 
     def __unicode__(self):
-        return u'%s %s' % (
+        return u'%s %s %s' % (
             ", ".join([p.name for p in self.modules.all()]),
-            self.created_at)
+            self.version, self.created_at)
 
 
-class Distribution(models.Model):
+class Subtask(models.Model):
     task = models.ForeignKey(Task)
     pub_date = models.DateTimeField(blank=True, null=True)
     environment = models.ForeignKey(Environment)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.SmallIntegerField(max_length=2, blank=True, null=True,
-                                      help_text=_('Task status'))
+                                      help_text=_('Task status'), default=1)
 
 
-class Release(models.Model):
-    task = models.ForeignKey(Task)
-    releaser = models.ForeignKey(User)
+class Assignment(models.Model):
+    subtask = models.ForeignKey(Subtask)
+    assignee = models.ForeignKey(User)
 
 
 class Package(models.Model):
@@ -363,8 +397,9 @@ class Package(models.Model):
 
 
 class Reply(models.Model):
-    subtask = models.ForeignKey(Distribution)
+    subtask = models.ForeignKey(Subtask)
     user = models.ForeignKey(User)
+    subject = models.CharField(max_length=64)
     content = models.TextField()
     created_at = models.DateTimeField(default=timezone.now)
 
@@ -377,4 +412,3 @@ class Reply(models.Model):
 class Attachment(models.Model):
     reply = models.ForeignKey(Reply)
     upload = models.FileField(upload_to='%Y/%m/%d')
-    created_at = models.DateTimeField(default=timezone.now)

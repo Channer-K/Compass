@@ -1,45 +1,45 @@
-{% extends "layout/base.html" %}
-{% block content %}
-<div id="sign-div">
-  <div id="container-div">
-    <div class="sign-header">
-    <p>Sign in</p>
-    <span class="fui-lock"></span>
+{% include 'layout/header.html' %}
+<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+  <div class="container-fluid">
+    <div class="navbar-header">
+      <a class="navbar-brand" href="#">Compass</a>
     </div>
-    <div class="sign-content">
-      <form class="form sign-form" role="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
-        <div style="height: 49px;">
-          {{ form.non_field_errors }}
-        </div>
-        {% csrf_token %}
-        <div class="form-group">
-          <input class="form-control" type="text" name="username" placeholder="Username" required="required" autofocus>
-          <span class="input-icon fui-user"></span>
-        </div>
-        <div class="form-group">
-          <input class="form-control" type="password" name="password" placeholder="Password" required="required">
-          <span class="input-icon fui-lock"></span>
-        </div>
-        <div class="row">
-          <div class="col-md-6">
-            <div class="mybox">
-              <label class="checkbox" for="checkbox1">
-                <input id="checkbox1" type="checkbox" data-toggle="checkbox">
-              Keep me logged in
-              </label>
+  </div>
+</nav>
+<div class="container">
+  <div id="sign-div">
+    <div id="container-div">
+      <div class="sign-header">
+      <p>Sign in</p>
+      <span class="fui-lock"></span>
+      </div>
+      <div class="sign-content">
+        <form class="form sign-form" role="form" method="post" action="{% url 'django.contrib.auth.views.login' %}">
+          <div style="height: 40px;">
+            {{ form.non_field_errors }}
+          </div>
+          {% csrf_token %}
+          <div class="form-group">
+            <input class="form-control" type="text" name="username" placeholder="Username" required="required" autofocus>
+            <span class="input-icon fui-user"></span>
+          </div>
+          <div class="form-group">
+            <input class="form-control" type="password" name="password" placeholder="Password" required="required">
+            <span class="input-icon fui-lock"></span>
+          </div>
+          <div class="row">
+            <div class="col-md-6 col-md-offset-6">
+              <div class="sign-forget">
+              <p>Forget <a href="#">Password?</a></p>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="sign-forget">
-            <p>Forget <a href="#">Password?</a></p>
-            </div>
-          </div>
-        </div>
-        <button type="submit" class="mybtn btn btn-block btn-info">
-          <span class="glyphicon glyphicon-log-in"> Sign in</span>
-        </button>
-      </form>
+          <button type="submit" class="mybtn btn btn-block btn-info">
+            <span class="glyphicon glyphicon-log-in"> Sign in</span>
+          </button>
+        </form>
+      </div>
     </div>
   </div>
 </div>
-{% endblock %}
+{% include 'layout/footer.html' %}

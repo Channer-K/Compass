@@ -1,0 +1,97 @@
+{% extends "layout/base.html" %}
+{% block sidebar %}
+<div class="col-sm-3 col-md-2 sidebar">
+  <ul class="nav nav-sidebar">
+    <li><a href="{% url 'index' %}">Overview</a></li>
+    <li class="active"><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+  </ul>
+</div>
+{% endblock %}
+{% block content %}
+<h1 class="page-header">Details</h1>
+<div class="contentwrapper">
+  <div class="contenttitle">
+    <h3>返回的结果中需要增加对ODBII数据的支持</h3>
+  </div>
+  <ul class="process anchor">
+    <li>
+      <a href="#wiz1step1" class="selected" isdone="1" rel="1">
+        <span class="h2">Step 1</span>
+        <span class="dot"><span></span></span>
+        <span class="label">上海ITS测试</span>
+      </a>
+    </li>
+    <li>
+      <a href="#wiz1step2" class="disabled" isdone="0" rel="2">
+        <span class="h2">Step 2</span>
+        <span class="dot"><span></span></span>
+        <span class="label">日本检证</span>
+      </a>
+    </li>
+    <li>
+      <a href="#wiz1step3" class="disabled" isdone="0" rel="3">
+        <span class="h2">Step 3</span>
+        <span class="dot"><span></span></span>
+        <span class="label">日本本番</span>
+      </a>
+    </li>
+  </ul>
+  <div id="wiz_content" class="content">
+    <div class="row">
+      <p class="col-md-6">申请人: <span>Channer</span></p>
+      <p class="col-md-6">申请时间： <span>August 10, 2014 15:21:12</span></p>
+    </div>
+    <div class="row">
+      <p class="col-md-6">发布版本：<span>v204.1.0</span></p>
+      <p class="col-md-6">发布模块：<span>navisocial</span></p>
+    </div>
+    <div class="row">
+      <p class="col-md-6">当前状态：发布中</p>
+      <p class="col-md-6">发布日期：<span>-</span></p>
+    </div>
+    <p>确认人：<span>admin</span></p>
+    <p>发布包：
+      <br><small>prd-dir-20140806.v204.1.2.tar.gz</small>
+      <br><small>prd-sns-20140806.v204.1.2.tar.gz</small>
+      <br><small>prd-common-20140806.v204.1.2.tar.gz</small>
+    </p>
+    <div class="reply">
+      <h5>Reply</h5>
+      <div class="wrap-reply">
+        <div class="row">
+          <h6>发布成功</h6><a href="#" title="id_reply">#2</a>
+        </div>
+        <div class="comment">
+          <div>
+            <p>测试脚本显示ITS环境没有问题，请确认！具体还要和客户端联调来确保是否还有其他问题。</p>
+            <p>数据包和应用包都已经做好参数替换，放置位置如下:</p>
+          </div>
+        </div>
+        <div class="read-more"></div>
+        <small>Updated by <strong>admin</strong> - August 10, 2014 15:21:12</small>
+      </div>
+      <div class="wrap-reply">
+        <div class="row">
+          <h6>请快点安排发布</h6><a href="#" title="id_reply">#1</a>
+        </div>
+        <div class="comment">
+          <div>
+            <p>日本决定于日本时间8.7上午10点，正式公开14春602版本地图。同时还有王星雨那里对应“发布时交通情报减少”这个问题的相关发布。所以这里和各位确认下本次发布的发布包。需要注意的是：由于本番环境没有发布过600，601的版本，是直接在401地图的基础上发布的。日本决定于日本时间8.7上午10点，正式公开14春602版本地图。同时还有王星雨那里对应“发布时交通情报减少”这个问题的相关发布。所以这里和各位确认下本次发布的发布包。需要注意的是：由于本番环境没有发布过600，601的版本，是直接在401地图的基础上发布的。</p>
+          </div>
+        </div>
+        <div class="read-more"></div>
+        <div class="attachment">
+          <p class="glyphicon glyphicon-paperclip"><a href="#"> Notification.log</a></p>
+        </div>
+        <small>Updated by <strong>Channer</strong> - August 10, 2014 15:21:12</small>
+      </div>
+      <form id="reply_form" action="#" role="form" method="post">
+        <textarea class="form-control" rows="4"></textarea>
+        <p>
+          <a id="id_reply" href="javascript:;" class="btn btn-info btn-small">快速回复</a>
+        </p>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

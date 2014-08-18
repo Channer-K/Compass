@@ -120,23 +120,25 @@ class TaskForm(forms.ModelForm):
 
 class TaskAdmin(admin.ModelAdmin):
     form = TaskForm
-    list_display = ('applicant', 'modules_list', 'version', 'created_at',)
+    list_display = ('modules_list', 'version', 'created_at',)
     filter_horizontal = ('modules',)
-    readonly_fields = ('applicant',)
     inlines = [PackageInline]
 
     def get_form(self, request, obj=None, **kwargs):
         # Proper kwargs are form, fields, exclude, formfield_callback
         if obj:
-            pass
+            self.readonly_fields = ['applicant', 'created_at']
         else:
-            kwargs['exclude'] = ['accept_group']
-
+            kwargs['exclude'] = ['accept_group', 'applicant', 'created_at']
         return super(TaskAdmin, self).get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        obj.applicant = request.user
-        obj.save()
+        if not change:
+            obj.applicant = request.user
+            obj.save()
+            for env in request.POST.getlist('environment'):
+                env_obj = models.Environment.objects.get(pk=env)
+                models.Subtask.objects.create(task=obj, environment=env_obj)
 
     def modules_list(self, obj):
         return ", ".join([p.name for p in obj.modules.all()])
