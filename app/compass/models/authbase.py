@@ -1,7 +1,4 @@
 # -*- coding: utf-8 -*-
-import re
-import mptt
-
 from django.core.mail import send_mail
 from django.core import validators
 from django.db import models
@@ -20,6 +17,30 @@ TASK_STATUS = (
     (2, u'发布中'),
     (3, u'等待确认'),
 )
+
+TASK_ACTIONS = (
+    (-3, u'强制终止'),   # read-only
+    (-2, u'任务失败'),   # read-only
+    (-1, u'拒绝发布'),   # read-only
+    (0, u'审核通过'),
+    (1, u'接受'),
+    (2, u'拒绝'),
+    (3, u'完成'),
+    (4, u'确认'),
+)
+
+
+def update_user_last_login(sender, user, **kwargs):
+    """
+    A signal receiver which updates the last_login date for
+    the user logging out.
+    """
+    user.last_login = timezone.now()
+    user.save(update_fields=['last_login'])
+
+from django.contrib.auth.models import update_last_login
+auth.signals.user_logged_in.disconnect(update_last_login)
+auth.signals.user_logged_out.connect(update_user_last_login)
 
 
 # A few helper functions for common logic between User and AnonymousUser.
@@ -68,6 +89,7 @@ models.ManyToManyField(
     null=True, blank=True,
     verbose_name=_('modules')).contribute_to_class(Group, 'modules')
 
+import mptt
 mptt.register(Group)
 
 
@@ -176,6 +198,7 @@ class MyUserManager(BaseUserManager):
 
 
 class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
+    import re
     username = models.CharField(
         _('username'), max_length=30, unique=True,
         help_text=_('Required. 30 characters or fewer. Letters, numbers and '
@@ -294,125 +317,3 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 class User(MyAbstractUser):
     class Meta(MyAbstractUser.Meta):
         swappable = 'AUTH_USER_MODEL'
-
-
-class Environment(models.Model):
-    name = models.CharField(max_length=64)
-
-    def __unicode__(self):
-        return self.name
-
-
-class ServerGroup(models.Model):
-    name = models.CharField(max_length=32)
-    environment = models.ForeignKey(Environment)
-    comment = models.CharField(max_length=128, null=True, blank=True)
-    groups = models.ManyToManyField(Group, verbose_name=_('user groups'))
-
-    class Meta:
-        permissions = (
-            ('can_view_server_group', 'Can view ServerGroup'),
-            )
-
-    def __unicode__(self):
-        return u'<%s -- %s>' % (self.name, self.environment)
-
-
-class Server(models.Model):
-    hostname = models.CharField(_('Host name'), max_length=64)
-    ip = models.IPAddressField()
-    groups = models.ManyToManyField(
-        ServerGroup,
-        verbose_name=_('server groups'),
-        help_text=_('Which groups server in.'))
-    is_active = models.BooleanField(default=True)
-    comment = models.CharField(max_length=128, null=True, blank=True)
-
-    def __unicode__(self):
-        return u'%s -- %s' % (self.hostname, self.ip)
-
-    def offline(self):
-        self.is_active = False
-        self.save(update_fields=['is_active'])
-
-    def online(self):
-        self.is_active = True
-        self.save(update_fields=['is_active'])
-
-
-class Task(models.Model):
-    applicant = models.ForeignKey(User)
-    version = models.CharField(max_length=32)
-    modules = models.ManyToManyField(
-        Module,
-        verbose_name=_('modules'),
-        help_text=_('The modules will be updated in this task.'))
-    created_at = models.DateTimeField(default=timezone.now)
-    cause = models.CharField(max_length=128)
-    explanation = models.CharField(max_length=128, blank=True, null=True)
-    comment = models.TextField(blank=True, null=True)
-
-    class Meta:
-        ordering = ('-created_at',)
-        permissions = (
-            ("view_task", "Can see available tasks"),
-            ("change_task_status", "Can change the status of tasks"),
-            ("close_task", "Can enforce a task to be closed"))
-
-    def __unicode__(self):
-        return u'%s %s %s' % (
-            ", ".join([p.name for p in self.modules.all()]),
-            self.version, self.created_at)
-
-
-class Subtask(models.Model):
-    task = models.ForeignKey(Task)
-    pub_date = models.DateTimeField(blank=True, null=True)
-    environment = models.ForeignKey(Environment)
-    updated_at = models.DateTimeField(auto_now=True)
-    status = models.SmallIntegerField(max_length=2, blank=True, null=True,
-                                      help_text=_('Task status'), default=1)
-
-
-class Assignment(models.Model):
-    subtask = models.ForeignKey(Subtask)
-    assignee = models.ForeignKey(User)
-
-
-class Package(models.Model):
-    filename = models.CharField(max_length=64)
-    path = models.CharField(max_length=256)
-    authors = models.CharField(
-        max_length=64, verbose_name=_('authors'),
-        help_text=_('The authors of package. '
-                    'Multiple authors are separated with comma.'))
-    task = models.ForeignKey(Task, blank=True, null=True)
-    created_at = models.DateTimeField(default=timezone.now)
-    is_published = models.BooleanField(_('publish status'), default=False)
-    comment = models.TextField(blank=True, null=True,
-                               help_text=_('Change log here.'))
-
-    def __unicode__(self):
-        return u'%s -- %s' % (self.authors, self.filename)
-
-    def get_absolute_path(self):
-        absolute_path = '%s/%s' % (self.path, self.filename)
-        return absolute_path.strip()
-
-
-class Reply(models.Model):
-    subtask = models.ForeignKey(Subtask)
-    user = models.ForeignKey(User)
-    subject = models.CharField(max_length=64)
-    content = models.TextField()
-    created_at = models.DateTimeField(default=timezone.now)
-
-    class Meta:
-        verbose_name = _('Reply')
-        verbose_name_plural = _('Replies')
-        ordering = ('created_at',)
-
-
-class Attachment(models.Model):
-    reply = models.ForeignKey(Reply)
-    upload = models.FileField(upload_to='%Y/%m/%d')
