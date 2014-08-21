@@ -29,19 +29,19 @@
           </div>
         </div>
         <div class="form-group">
-          <label for="id_firstname" class="col-sm-2 control-label">First name</label>
+          <label for="{{ form.first_name.id_for_label }}" class="col-sm-2 control-label">First name</label>
           <div class="col-sm-6">
             {{form.first_name}}
           </div>
         </div>
         <div class="form-group">
-          <label for="id_lastname" class="col-sm-2 control-label">Last name</label>
+          <label for="{{ form.last_name.id_for_label }}" class="col-sm-2 control-label">Last name</label>
           <div class="col-sm-6">
             {{form.last_name}}
           </div>
         </div>
         <div class="form-group {% if form.email.errors %}has-error{% endif %}">
-          <label for="id_email" class="col-sm-2 control-label">Email</label>
+          <label for="{{ form.email.id_for_label }}" class="col-sm-2 control-label">Email</label>
           <div class="col-sm-6">
             {{form.email}}
             <span>{{ form.email.errors }}</span>
@@ -75,23 +75,23 @@
         <!-- Security Segment -->
         <div class="contenttitle"><h3>Security</h3></div>
         <div class="form-group {% if form.old_password.errors %}has-error{% endif %}">
-          <label for="id_oldpassword" class="col-sm-2 control-label">{{ form.fields.old_password.label }}</label>
+          <label for="{{ form.old_password.id_for_label }}" class="col-sm-2 control-label">{{ form.fields.old_password.label }}</label>
           <div class="col-sm-6">
-            <input type="password" class="form-control" name="old_password" id="id_oldpassword">
+            {{ form.old_password }}
             <span>{{ form.old_password.errors }}</span>
           </div>
         </div>
         <div class="form-group {% if form.new_password1.errors %}has-error{% endif %}">
-          <label for="id_password1" class="col-sm-2 control-label">{{ form.fields.new_password1.label }}</label>
+          <label for="{{ form.new_password1.id_for_label }}" class="col-sm-2 control-label">{{ form.fields.new_password1.label }}</label>
           <div class="col-sm-6">
-            <input type="password" class="form-control" name="new_password1" id="id_password1">
+            {{ form.new_password1 }}
             <span>{{ form.new_password1.errors }}</span>
           </div>
         </div>
         <div class="form-group {% if form.new_password2.errors %}has-error{% endif %}">
-          <label for="id_password2" class="col-sm-2 control-label">Confirmation:</label>
+          <label for="{{ form.new_password2.id_for_label }}" class="col-sm-2 control-label">Confirmation:</label>
           <div class="col-sm-6">
-            <input type="password" class="form-control" name="new_password2" id="id_password2">
+            {{ form.new_password2 }}
             <span>{{ form.new_password2.errors }}</span>
           </div>
         </div>

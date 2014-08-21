@@ -111,6 +111,7 @@ class PackageInline(admin.TabularInline):
 
 class TaskForm(forms.ModelForm):
     environment = forms.ModelMultipleChoiceField(
+        label=u'发布环境',
         widget=forms.CheckboxSelectMultiple,
         queryset=models.Environment.objects.all())
 

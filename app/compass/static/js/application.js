@@ -32,9 +32,9 @@ String.prototype.repeat = function(num) {
     });
 
     // Custom Selects
-    $("select[name='huge']").selectpicker({style: 'btn-hg btn-primary', menuStyle: 'dropdown-inverse'});
-    $("select[name='herolist']").selectpicker({style: 'btn-primary', menuStyle: 'dropdown-inverse'});
-    $("select[name='info']").selectpicker({style: 'btn-info'});
+    $("select[data-toggle='huge']").selectpicker({style: 'btn-hg btn-primary', menuStyle: 'dropdown-inverse'});
+    $("select[data-toggle='herolist']").selectpicker({style: 'btn-primary', menuStyle: 'dropdown-inverse'});
+    $("select[data-toggle='info']").selectpicker({style: 'btn-info'});
 
     // Tooltips
     $("[data-toggle=tooltip]").tooltip("show");

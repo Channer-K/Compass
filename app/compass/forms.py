@@ -113,15 +113,15 @@ class ProfileForm(forms.Form):
         label=u"Email", max_length=254,
         widget=forms.EmailInput(attrs={'class': 'form-control'}))
 
-    old_password = forms.CharField(required=False,
-                                   label=_("Old password"),
-                                   widget=forms.PasswordInput)
-    new_password1 = forms.CharField(required=False,
-                                    label=_("New password"),
-                                    widget=forms.PasswordInput)
-    new_password2 = forms.CharField(required=False,
-                                    label=_("New password confirmation"),
-                                    widget=forms.PasswordInput)
+    old_password = forms.CharField(
+        required=False, label=_("Old password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password1 = forms.CharField(
+        required=False, label=_("New password"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+    new_password2 = forms.CharField(
+        required=False, label=_("New password confirmation"),
+        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -175,3 +175,70 @@ class ProfileForm(forms.Form):
 
             self.user.save(update_fields=update_fields)
         return self.user
+
+
+class NewTaskForm(forms.ModelForm):
+    environment = forms.ModelMultipleChoiceField(
+        label=u'发布环境',
+        queryset=Environment.objects.all(),
+        widget=forms.CheckboxSelectMultiple()
+    )
+
+    class Meta:
+        model = Task
+        fields = ['version', 'modules', 'amendment', 'explanation', 'comment']
+        widgets = {
+            'version': forms.TextInput(attrs={'class': 'form-control'}),
+            'amendment': forms.TextInput(attrs={'class': 'form-control'}),
+            'explanation': forms.Textarea(attrs={'class': 'form-control',
+                                                 'rows': '5'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control',
+                                             'rows': '3'}),
+        }
+        error_messages = {
+            'version': {'max_length': "Version is too long.", },
+            'amendment': {'max_length': "Amendment is too long.", },
+            'explanation': {'max_length': "Explanation is too long.", },
+        }
+
+    def __init__(self, request=None, *args, **kwargs):
+        self.request = request
+        self.user_cache = request.user
+        super(NewTaskForm, self).__init__(*args, **kwargs)
+
+        self.fields['modules'] = forms.MultipleChoiceField(
+            label=u'发布模块', widget=forms.CheckboxSelectMultiple(),
+            choices=self.user_cache.all_modules_choices())
+
+    def save(self, commit=True, force_insert=False, eids=None,
+             force_update=False, *args, **kwargs):
+        task = super(NewTaskForm, self).save(commit=False, *args, **kwargs)
+        task.applicant = self.user_cache
+        task.save()
+        self.save_m2m()
+
+        if eids is not None:
+            # Active the first subtask
+            env = Environment.objects.get(pk=eids[0])
+            st = Subtask.objects.create(task=task, environment=env)
+            task.progressing_id = st.pk
+            task.save(update_fields=['progressing_id'])
+
+            for eid in eids[1:]:
+                env = Environment.objects.get(pk=eid)
+                Subtask.objects.create(task=task, environment=env)
+
+        return task
+
+
+class PackageForm(forms.ModelForm):
+    class Meta:
+        model = Package
+        fields = ('filename', 'path', 'authors', 'comment',)
+        widgets = {
+            'filename': forms.TextInput(attrs={'class': 'form-control'}),
+            'path': forms.TextInput(attrs={'class': 'form-control'}),
+            'authors': forms.TextInput(attrs={'class': 'form-control'}),
+            'comment': forms.Textarea(attrs={'class': 'form-control',
+                                             'rows': '3'}),
+        }

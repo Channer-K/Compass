@@ -6,6 +6,11 @@ from django.utils.translation import ugettext_lazy as _
 
 class Environment(models.Model):
     name = models.CharField(max_length=64)
+    priority = models.IntegerField()
+
+    class Meta:
+        app_label = 'compass'
+        ordering = ('priority',)
 
     def __unicode__(self):
         return self.name
@@ -18,6 +23,7 @@ class ServerGroup(models.Model):
     groups = models.ManyToManyField(Group, verbose_name=_('user groups'))
 
     class Meta:
+        app_label = 'compass'
         permissions = (
             ('can_view_server_group', 'Can view ServerGroup'),
             )
@@ -35,6 +41,9 @@ class Server(models.Model):
         help_text=_('Which groups server in.'))
     is_active = models.BooleanField(default=True)
     comment = models.CharField(max_length=128, null=True, blank=True)
+
+    class Meta:
+        app_label = 'compass'
 
     def __unicode__(self):
         return u'%s -- %s' % (self.hostname, self.ip)

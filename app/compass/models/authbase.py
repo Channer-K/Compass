@@ -43,7 +43,7 @@ auth.signals.user_logged_in.disconnect(update_last_login)
 auth.signals.user_logged_out.connect(update_user_last_login)
 
 
-# A few helper functions for common logic between User and AnonymousUser.
+# A few helper functions for common logic to User.
 def _user_get_all_permissions(user, obj):
     permissions = set()
     for backend in auth.get_backends():
@@ -73,6 +73,9 @@ class Module(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    class Meta:
+        app_label = 'compass'
 
 
 # Inject some fields to auth.Group
@@ -104,6 +107,9 @@ class Role(models.Model):
 
     def __unicode__(self):
         return self.name
+
+    class Meta:
+        app_label = 'compass'
 
 
 class MyPermissionsMixin(models.Model):
@@ -316,4 +322,5 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
 class User(MyAbstractUser):
     class Meta(MyAbstractUser.Meta):
+        app_label = 'compass'
         swappable = 'AUTH_USER_MODEL'

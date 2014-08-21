@@ -15,4 +15,5 @@ urlpatterns = patterns(
     url(r'^set-offline/(?P<uid>\d+)$', views.set_offline, name='set-offline'),
     url(r'^tasks/$', views.tasks, name='tasks'),
     url(r'^task/(?P<id>\d+)', views.task_detail, name='detail'),
+    url(r'^task/new/$', views.new_task, name='new-task'),
 )
