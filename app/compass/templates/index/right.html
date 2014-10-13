@@ -13,7 +13,7 @@
       </span><!--three_fourth-->
       <span class="col-md-3 last">
         <span class="right">
-          <span class="h3">2</span>
+          <span class="h3">{{user.this_week_pub.count}}</span>
         </span><!--right-->
       </span>
       <br clear="all">
@@ -29,7 +29,7 @@
       </span><!--three_fourth-->
       <span class="col-md-3 last">
         <span class="right">
-          <span class="h3">5</span>
+          <span class="h3">{{user.last_week_pub.count}}</span>
         </span><!--right-->
       </span>
       <br clear="all">
@@ -45,7 +45,7 @@
       </span>
       <span class="col-md-3 last">
         <span class="right">
-          <span class="h3">10</span>
+          <span class="h3">{{user.get_user_tasks.count}}</span>
         </span><!--right-->
       </span>
       <br clear="all">
@@ -61,7 +61,10 @@
     <li>
       <div class="entry_wrap">
         <div class="entry_content">
-          <a class="btn btn-primary" href="{% url 'new-task' %}" title="New task">New task</a>
+          {% if perms.compass.add_task %}
+            <a class="btn btn-primary btn-sm" href="{% url 'new-task' %}" title="New task">New task</a>
+          {% endif %}
+            <a class="btn btn-primary btn-sm" href="{% url 'profile' %}" title="Change Status">Work Status</a>
         </div>
       </div>
     </li>
@@ -77,9 +80,9 @@
     <li>
       <div class="entry_wrap">
         <div class="entry_content">
-          <p>离线人员：{{ user.offline_in_group }}</p>
-          <p>在线人员：{{ user.online_in_group }}</p>
-          <small style="font-style: italic;">以上为组内成员动态</small>
+          <p>离线人员：{{ user.offline_in_group|join:" " }}</p>
+          <p>在线人员：{{ user.online_in_group|join:" " }}</p>
+          <small style="font-style: italic;">以上仅为组内成员动态</small>
         </div>
       </div>
     </li>

@@ -21,6 +21,10 @@ class UserCreationForm(forms.ModelForm):
         model = models.User
         fields = ('email',)
 
+    def clean_username(self):
+        username = self.cleaned_data.get('username').lower()
+        return username
+
     def clean_password2(self):
         # Check that the two password entries match
         password1 = self.cleaned_data.get("password1")
@@ -83,13 +87,14 @@ class MyUserAdmin(UserAdmin):
 
 
 class MyGroupAdmin(MPTTModelAdmin):
-    fields = ('name', 'parent', 'permissions', 'modules',)
-    filter_horizontal = ('permissions', 'modules',)
+    fields = ('name', 'parent', 'permissions',)
+    filter_horizontal = ('permissions',)
 
 
 class RoleAdmin(admin.ModelAdmin):
-    fields = ('name', 'group',)
+    fields = ('name', 'group', 'superior', 'permissions',)
     list_display = ('name', 'group',)
+    filter_horizontal = ('permissions',)
 
 
 class ServerAdmin(admin.ModelAdmin):
@@ -153,4 +158,4 @@ admin.site.register(models.Environment)
 admin.site.register(models.ServerGroup, ServerGroupAdmin)
 admin.site.register(models.Module)
 admin.site.register(models.Role, RoleAdmin)
-admin.site.register(models.Task, TaskAdmin)
+# admin.site.register(models.Task, TaskAdmin)

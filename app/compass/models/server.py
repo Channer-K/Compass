@@ -6,7 +6,7 @@ from django.utils.translation import ugettext_lazy as _
 
 class Environment(models.Model):
     name = models.CharField(max_length=64)
-    priority = models.IntegerField()
+    priority = models.IntegerField(unique=True)
 
     class Meta:
         app_label = 'compass'

@@ -3,7 +3,7 @@
 <div class="col-sm-3 col-md-2 sidebar">
   <ul class="nav nav-sidebar">
     <li class="active"><a href="{% url 'index' %}">Overview</a></li>
-    <li><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+    <li><a href="{% url 'tasks' %}">Task</a></li>
   </ul>
 </div>
 {% endblock %}
@@ -89,7 +89,7 @@
           </div>
         </div>
         <div class="form-group {% if form.new_password2.errors %}has-error{% endif %}">
-          <label for="{{ form.new_password2.id_for_label }}" class="col-sm-2 control-label">Confirmation:</label>
+          <label for="{{ form.new_password2.id_for_label }}" class="col-sm-2 control-label">Confirmation</label>
           <div class="col-sm-6">
             {{ form.new_password2 }}
             <span>{{ form.new_password2.errors }}</span>
@@ -106,16 +106,12 @@
 $(function(){
   $('#id_work_status').on('change', function() {
     if($(this).parent().hasClass("switch-on")){
-      $.post('{% url 'set-offline' user.id %}', function(e){
-        if(e.status == 'ok'){
-          alert('警告：已离线，请及时恢复在线状态！');
-        }
+      $.post('{% url 'offline' user.id %}', function(e){
+        if(e.status == 'ok'){alert('警告：已离线，请及时恢复在线状态！');}
       });
     }else{
-      $.post('{% url 'set-online' user.id %}', function(e){
-        if(e.status == 'ok'){
-          alert('已上线，请留意任务请求！');
-        }
+      $.post('{% url 'online' user.id %}', function(e){
+        if(e.status == 'ok'){alert('已上线，请留意任务请求！');}
       });
     }
   });

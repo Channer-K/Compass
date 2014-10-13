@@ -25,17 +25,20 @@ class MyModelBackend(object):
         Returns a set of permission strings that this user has through his/her
         groups.
         """
+        perms = set()
         if user_obj.is_anonymous() or obj is not None:
-            return set()
+            return perms
         if not hasattr(user_obj, '_group_perm_cache'):
             if user_obj.is_superuser:
                 perms = Permission.objects.all()
             else:
-                user_groups_field = get_user_model()._meta.get_field('groups')
-                user_groups_query = 'group__%s' % user_groups_field.related_query_name()
-                perms = Permission.objects.filter(**{user_groups_query: user_obj})
-            perms = perms.values_list('content_type__app_label', 'codename').order_by()
-            user_obj._group_perm_cache = set(["%s.%s" % (ct, name) for ct, name in perms])
+                for group in user_obj.get_all_groups():
+                    perms.update(group.permissions.all())
+
+            user_obj._group_perm_cache = set(
+                ["%s.%s" % (perm.content_type.app_label, perm.codename) for
+                    perm in perms]
+            )
         return user_obj._group_perm_cache
 
     def get_role_permissions(self, user_obj, obj=None):

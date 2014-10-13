@@ -1,0 +1,31 @@
+<form action="{% url 'go-next' task.pk %}" method="POST" role="form">
+  {% csrf_token %}
+  {{req_task.render_html}}
+</form>
+
+{% if user.is_superuser or perms.compass.terminate_task and req_task.editable  %}
+  <button class="btn btn-warning btn-small" data-toggle="modal" data-target="#myModal">
+      撤销发布
+  </button>
+  <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+          <h4 class="modal-title" id="myModalLabel">撤销发布</h4>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+              <label class="col-sm-3 control-label">请输入撤销理由：</label>
+              <div class="col-sm-9">
+                <input class="form-control" type="text" name="" id="">
+              </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-primary">确认</button>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}

@@ -1,15 +1,47 @@
 !function ($) {
-  $("#id_from_date").datepicker({onSelect:function(dateText,inst){
-      $("#id_to_date").datepicker("option","minDate",dateText);
+  function getCookie(name) {
+    var cookieValue = null;
+    if (document.cookie && document.cookie != '') {
+      var cookies = document.cookie.split(';');
+      for (var i = 0; i < cookies.length; i++) {
+        var cookie = jQuery.trim(cookies[i]);
+        // Does this cookie string begin with the name we want?
+        if (cookie.substring(0, name.length + 1) == (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+        }
+      }
     }
-  });
+    return cookieValue;
+}
 
-  $("#id_to_date").datepicker({onSelect:function(dateText,inst){
-      $("#id_from_date").datepicker("option","maxDate",dateText);
+  var csrftoken = getCookie('csrftoken');
+
+  function csrfSafeMethod(method) {
+    // these HTTP methods do not require CSRF protection
+    return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+  }
+  $.ajaxSetup({
+    beforeSend: function(xhr, settings) {
+      if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+        xhr.setRequestHeader("X-CSRFToken", csrftoken);
+      }
     }
   });
 
   $('.reply .wrap-reply:last').addClass("last");
+
+  $("#id_from_date").datepicker({
+    onSelect:function(dateText,inst){
+      $("#id_to_date").datepicker("option","minDate",dateText);
+    }
+  });
+
+  $("#id_to_date").datepicker({
+    onSelect:function(dateText,inst){
+      $("#id_from_date").datepicker("option","maxDate",dateText);
+    }
+  });
 
   // Hit the top
   function gotoTop(min_height){
@@ -34,7 +66,7 @@
 
   // Fold back the long comment
   $(function(){
-    var slideHeight = 68;
+    var slideHeight = 70;
     $('.comment').each(function(){
       var defHeight = $(this).height();
       if(defHeight >= slideHeight){
@@ -127,11 +159,22 @@
     }
     return false;
   }
+
   // Register the click event handlers
   $("#add-pack").click(function () {
     return addForm(this, "form");
   });
   $(".del-pack").click(function () {
     return deleteForm(this, "form");
+  });
+
+  $(function(){
+    $('#filter').click(function(){
+      $('#filter-form').submit();
+    });
+
+    $('#reset_id').click(function(){
+      $('#info_id').val('');
+    });
   });
 }(window.jQuery);

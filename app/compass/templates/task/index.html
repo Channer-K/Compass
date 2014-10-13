@@ -1,168 +1,142 @@
 {% extends "layout/base.html" %}
+{% load compass_tags %}
 {% block sidebar %}
-<div class="col-sm-3 col-md-2 sidebar">
+<div class="sidebar">
   <ul class="nav nav-sidebar">
     <li><a href="{% url 'index' %}">Overview</a></li>
-    <li class="active"><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+    <li class="active"><a href="{% url 'tasks' %}">Task</a></li>
   </ul>
 </div>
 {% endblock %}
 {% block content %}
-  <h1 class="page-header">Tasks</h1>
-  <div class="contentwrapper">
-    <div class="contenttitle">
-      <h3>Filter</h3>
-    </div>
-    <div class="formContainer">
-      <form role='form' class="form-horizontal" action="{% url 'tasks' %}" method="post" accept-charset="utf-8">
-          {% csrf_token %}
-          <div class="contentwrapper">
-            <div class="subcontent">
-              <div class="form-group">
-                <label class="col-sm-2 control-label">Date range:</label>
-                <div class="col-sm-4">
-                  <input type="text" class="form-control" name="from-date" id="id_from_date">
-                  <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
-                </div>
-                <div class="col-sm-4">
-                  <input type="text" class="form-control" name="to-date" id="id_to_date">
-                  <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
-                </div>
+<h1 class="page-header">Tasks</h1>
+<div class="contentwrapper">
+  <div class="contenttitle">
+    <h3>Filter</h3>
+  </div>
+  <div class="formContainer">
+    <form id="filter-form" role='form' class="form-horizontal" action="{% url 'filter' %}" method="post" accept-charset="utf-8">
+        {% csrf_token %}
+        <div class="contentwrapper">
+          <div class="subcontent">
+            <div class="form-group">
+              <label class="col-sm-2 control-label">申请时间:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" name="from-date" id="id_from_date">
+                <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
-              <div class="form-group">
-                <label class="col-sm-2 control-label">Modules:</label>
-                <div class="col-sm-8" style="padding-top: 10px;">
-                  <div class="row">
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="m_checkbox1">
-                    <input type="checkbox" value="" id="m_checkbox1" data-toggle="checkbox">
-                    Navisocial
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="m_checkbox2">
-                    <input type="checkbox" value="" id="m_checkbox2" data-toggle="checkbox">
-                    NotificationAPI
-                  </label>
-                  </div>
-                  </div>
-                </div>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" name="to-date" id="id_to_date">
+                <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
-              <div class="form-group">
-                <label class="col-sm-2 control-label">Status:</label>
-                <div class="col-sm-8" style="padding-top: 10px;">
-                  <div class="row">
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="s_checkbox1">
-                    <input type="checkbox" value="" id="s_checkbox1" data-toggle="checkbox">
-                    审核中
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="s_checkbox2">
-                    <input type="checkbox" value="" id="s_checkbox2" data-toggle="checkbox">
-                    等待发布
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="s_checkbox3">
-                    <input type="checkbox" value="" id="s_checkbox3" data-toggle="checkbox">
-                    发布中
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="s_checkbox4">
-                    <input type="checkbox" value="" id="s_checkbox4" data-toggle="checkbox">
-                    发布成功
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="s_checkbox5">
-                    <input type="checkbox" value="" id="s_checkbox5" data-toggle="checkbox">
-                    发布失败
-                  </label>
-                  </div>
-                  </div>
-                </div>
+            </div>
+            <div class="form-group">
+              <label for="{{ form.modules.id_for_label }}" class="col-sm-2 control-label">
+                {{form.modules.label}}
+              </label>
+              <div class="col-sm-8">
+                {% for module in form.modules %}
+                  <label class="checkbox-inline">{{ module }}</label>
+                {% endfor %}
               </div>
-              <div class="form-group">
-                <label class="col-sm-2 control-label">Environment:</label>
-                <div class="col-sm-8" style="padding-top: 10px;">
-                  <div class="row">
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="e_checkbox1">
-                    <input type="checkbox" value="" id="e_checkbox1" data-toggle="checkbox">
-                    上海ITS测试
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="e_checkbox2">
-                    <input type="checkbox" value="" id="e_checkbox2" data-toggle="checkbox">
-                    日本检证
-                  </label>
-                  </div>
-                  <div class="col-sm-4">
-                  <label class="checkbox" for="e_checkbox3">
-                    <input type="checkbox" value="" id="3_checkbox3" data-toggle="checkbox">
-                    日本本番
-                  </label>
-                  </div>
-                  </div>
+            </div>
+            <div class="form-group">
+              <label for="{{form.status.id_for_label}}" class="col-sm-2 control-label">
+                {{form.status.label}}
+              </label>
+              {% if form.status|length < 6 %}
+                <div class="col-sm-8">
+                  {% for stat in form.status %}
+                    <label class="checkbox-inline">{{stat}}</label>
+                  {% endfor %}
                 </div>
+              {% else %}
+                {% for stat in form.status %}
+                  {% if forloop.counter == 1  %}<div class="col-sm-8">{% endif %}
+                  {% if forloop.counter == 6 %}</div><div class="col-sm-8 col-sm-offset-2">{% endif %}
+                  <label class="checkbox-inline">{{stat}}</label>
+                {% endfor %}
+                </div>
+              {% endif %}
+            </div>
+            <div class="form-group">
+              <label for="{{form.environment.id_for_label}}" class="col-sm-2 control-label">
+                {{form.environment.label}}
+              </label>
+              <div class="col-sm-8">
+                {% for env in form.environment %}
+                  <label class="checkbox-inline">{{ env }}</label>
+                {% endfor %}
               </div>
             </div>
           </div>
-          <div class="actionBar">
-            <a href="javascript:;" class="btn btn-primary btn-small" style="float: right;">Search</a>
+        </div>
+        <div class="actionBar">
+          {% if perms.compass.add_task %}
+            <a href="{% url 'new-task' %}" class="btn btn-primary btn-sm" style="float: right; margin-left: 5px;">New Task</a>
+          {% endif %}
+          <button type="submit" class="btn btn-success btn-sm" style="float: right; margin-left: 5px;">Search</button>
+        </div>
+    </form>
+  </div>
+  <div class="contenttitle">
+    <h3>Task List</h3>
+  </div>
+  {% for task in tasks %}
+    <div class="panel-group" id="accordion{{forloop.counter}}">
+    <div class="panel panel-default">
+      <div class="panel-heading {% if task.in_progress.status.mark > 0 %}panel-success{% elif task.in_progress.status.mark < 0 %}panel-failure{% endif %}">
+        <h4 class="panel-title">
+          <a data-toggle="collapse" data-parent="#accordion{{forloop.counter}}" href="#collapse{{forloop.counter}}">
+            {{task.amendment}} - {{task.version}} - {{task.created_at|get_due_date_string}}
+          </a>
+        </h4>
+      </div>
+      <div id="collapse{{forloop.counter}}" class="panel-collapse collapse {% if task.editable %}in{% endif %}">
+        <div class="panel-body">
+          <div class="row">
+            <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
+            <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at}}</span></p>
           </div>
-      </form>
-    </div>
-    <div class="contenttitle">
-      <h3>Task List</h3>
-    </div>
-    <div class="panel-group" id="accordion">
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapseOne">
-            Collapsible Group Item #1
-          </a>
-        </h4>
-      </div>
-      <div id="collapseOne" class="panel-collapse collapse in">
-        <div class="panel-body">
-          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
+          <div class="row">
+            <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
+            <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
+          </div>
+          <div class="row">
+            <p class="col-md-6"><b>发布情况：</b><span>{{task.in_progress.status.name}}{% if task.info %}（{{task.info}}）{% endif %}</span></p>
+            <p class="col-md-6"><b>当前环境：</b><span>{{task.in_progress.environment.name}}</span></p>
+          </div>
+          <p><b>确认人：</b><span>{{task.auditor.username}}</span></p>
+          <p><b>备注</b>：
+          <p>{{task.comment|default:"无"|ellipses:120}}</p>
+          <p><a href="{%url 'detail' id=task.pk step=task.in_progress.pk %}">查看详情</a></p>
         </div>
       </div>
     </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapseTwo">
-            Collapsible Group Item #2
-          </a>
-        </h4>
-      </div>
-      <div id="collapseTwo" class="panel-collapse collapse">
-        <div class="panel-body">
-          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-        </div>
-      </div>
     </div>
-    <div class="panel panel-default">
-      <div class="panel-heading">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion" href="#collapseThree">
-            Collapsible Group Item #3
-          </a>
-        </h4>
-      </div>
-      <div id="collapseThree" class="panel-collapse collapse">
-        <div class="panel-body">
-          Anim pariatur cliche reprehenderit, enim eiusmod high life accusamus terry richardson ad squid. 3 wolf moon officia aute, non cupidatat skateboard dolor brunch. Food truck quinoa nesciunt laborum eiusmod. Brunch 3 wolf moon tempor, sunt aliqua put a bird on it squid single-origin coffee nulla assumenda shoreditch et. Nihil anim keffiyeh helvetica, craft beer labore wes anderson cred nesciunt sapiente ea proident. Ad vegan excepteur butcher vice lomo. Leggings occaecat craft beer farm-to-table, raw denim aesthetic synth nesciunt you probably haven't heard of them accusamus labore sustainable VHS.
-        </div>
-      </div>
+  {% endfor %}
+  {% if tasks.paginator.num_pages > 1 %}
+  <div class="panel-group" style="text-align: center;">
+    <div class="pagination">
+      <ul>
+      {% if tasks.has_previous %}
+        <li class="previous">
+          <a href="?page={{ tasks.previous_page_number }}" class="fui-arrow-left"></a>
+        </li>
+        {% endif %}
+        {% for page in tasks.paginator.page_range %}
+          <li {% ifequal page tasks.number  %}class="active"{% endifequal %}>
+            <a href="?page={{ page }}">{{page}}</a>
+          </li>
+        {% endfor %}
+        {% if tasks.has_next %}
+        <li class="next">
+          <a href="?page={{ tasks.next_page_number }}" class="fui-arrow-right"></a>
+        </li>
+        {% endif %}
+      </ul>
     </div>
   </div>
+  {% endif %}
 </div>
 {% endblock %}

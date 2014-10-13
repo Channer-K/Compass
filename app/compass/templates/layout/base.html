@@ -1,28 +1,24 @@
 {% include 'layout/header.html' %}
-<div class="container">
-  <div id="goTop"></div>
-  <!-- navbar here -->
-  {% include 'layout/navbar.html' %}
-  <div class="container-fluid">
-    <div class="row">
-      {% block sidebar %}{% endblock %}
-      <div class="main">
-        {% if messages %}
-          <!-- alert messages -->
-          {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
-              <button type="button" class="close" data-dismiss="alert">
-                <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
-              </button>
-              {{ message }}
-            </div>
-          {% endfor %}
-        {% endif %}
+<div id="goTop"></div>
+<!-- navbar here -->
+{% include 'layout/navbar.html' %}
+<div class="container-fluid">
+  {% block sidebar %}{% endblock %}
+  <div class="main">
+    {% if messages %}
+      <!-- alert messages -->
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible" role="alert">
+          <button type="button" class="close" data-dismiss="alert">
+            <span aria-hidden="true">&times;</span><span class="sr-only">Close</span>
+          </button>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
 
-        <!-- content here -->
-        {% block content %}{% endblock %}
-      </div>
-    </div>
-  </div><!-- container-fluid -->
-</div>
+    <!-- content here -->
+    {% block content %}{% endblock %}
+  </div>
+</div><!-- container-fluid -->
 {% include 'layout/footer.html' %}

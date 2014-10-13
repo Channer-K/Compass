@@ -3,7 +3,7 @@
 <div class="col-sm-3 col-md-2 sidebar">
   <ul class="nav nav-sidebar">
     <li><a href="{% url 'index' %}">Overview</a></li>
-    <li class="active"><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+    <li class="active"><a href="{% url 'tasks' %}">Task</a></li>
   </ul>
 </div>
 {% endblock %}
@@ -35,7 +35,7 @@
           <label for="{{ form.modules.id_for_label }}" class="col-sm-2 control-label">{{ form.modules.label }}</label>
           <div class="col-sm-6">
             {% for module in form.modules %}
-              <label class="checkbox-inline">
+              <label for="{{module.id_for_label}}" class="checkbox-inline">
                 {{ module }}
               </label>
             {% endfor %}
@@ -46,7 +46,7 @@
           <label for="{{ form.environment.id_for_label }}" class="col-sm-2 control-label">{{ form.environment.label }}</label>
           <div class="col-sm-6">
             {% for env in form.environment %}
-              <label for="{{ env.id_for_label }}"  class="checkbox-inline">
+              <label for="{{ env.id_for_label }}" class="checkbox-inline">
                 {{env}}
               </label>
             {% endfor %}
@@ -89,7 +89,7 @@
           <div class="row">
             <div class="form-group" style="margin-right: 30px;">
               <label for="{{form.filename.id_for_label}}"
-                     class="col-sm-1 col-sm-offset-1 control-label">
+                     class="col-sm-2 control-label">
                 {{ form.filename.label }}
               </label>
               <div class="col-sm-4 {% if form.filename.errors %}has-error{% endif %}">
@@ -110,7 +110,7 @@
           <div class="row">
             <div class="form-group" style="margin-right: 30px;">
               <label for="{{form.authors.id_for_label}}"
-                     class="col-sm-1 col-sm-offset-1 control-label">
+                     class="col-sm-2 control-label">
                 {{ form.authors.label }}
               </label>
               <div class="col-sm-4 {% if form.authors.errors %}has-error{% endif %}">
@@ -123,7 +123,7 @@
           <div class="row">
             <div class="form-group" style="margin-right: 30px;">
               <label for="{{form.comment.id_for_label}}"
-                     class="col-sm-1 col-sm-offset-1 control-label">
+                     class="col-sm-2 control-label">
                 {{ form.comment.label }}
               </label>
               <div class="col-sm-6">

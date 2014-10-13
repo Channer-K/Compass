@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import warnings
-from compass.models import *
 from django import forms
+from compass.models import *
+from compass.conf import settings
 from django.utils.text import capfirst
+from compass.utils.permissions import modules_can_access
 from django.contrib.auth import authenticate, get_user_model
 from django.utils.translation import ugettext_lazy as _
 
@@ -52,15 +53,9 @@ class SigninForm(forms.Form):
                     params={'username': self.username_field.verbose_name},
                 )
             elif not self.user_cache.is_active:
-                raise forms.ValidationError(
-                    self.error_messages['inactive'],
-                    code='inactive',
-                )
+                raise forms.ValidationError(self.error_messages['inactive'],
+                                            code='inactive',)
         return self.cleaned_data
-
-    def check_for_test_cookie(self):
-        warnings.warn("check_for_test_cookie is deprecated; ensure your login"
-                      "view is CSRF-protected.", DeprecationWarning)
 
     def get_user_id(self):
         if self.user_cache:
@@ -71,28 +66,76 @@ class SigninForm(forms.Form):
         return self.user_cache
 
 
-class UploadFileForm(forms.Form):
-    title = forms.CharField(max_length=50)
-    uploaded_file = forms.FileField()
+class MultiFileInput(forms.FileInput):
+    def render(self, name, value, attrs={}):
+        attrs['multiple'] = 'multiple'
+        return super(MultiFileInput, self).render(name, None, attrs=attrs)
+
+    def value_from_datadict(self, data, files, name):
+        if hasattr(files, 'getlist'):
+            return files.getlist(name)
+        else:
+            return [files.get(name)]
 
 
-class FilterForm(forms.Form):
-    from_date = forms.DateField(label=u'开始时间', input_formats=['%Y-%m-%d'])
-    to_date = forms.DateField(label=u'结束时间', input_formats=['%Y-%m-%d'])
-    modules = forms.MultipleChoiceField(label=u'发布模块', choices=[],
-                                        widget=forms.CheckboxSelectMultiple())
-    status = forms.MultipleChoiceField(
-        label=u'任务状态',
-        choices=[(1, u'等待审核'), (2, u'等待发布'), (3, u'发布中')],
-        widget=forms.CheckboxSelectMultiple())
+class MultiFileField(forms.FileField):
+    widget = MultiFileInput
+    default_error_messages = {
+        'min_num': u"Ensure at least %(min_num)s files are uploaded (received %(num_files)s).",
+        'max_num': u"Ensure at most %(max_num)s files are uploaded (received %(num_files)s).",
+        'file_size' : u"File: %(uploaded_file_name)s, exceeded maximum upload size.",
+        'error_ext': u'File type is not supported.'
+    }
 
-    def __init__(self, user=None, *args, **kwargs):
-        super(FilterForm, self).__init__(*args, **kwargs)
+    def __init__(self, *args, **kwargs):
+        self.min_num = kwargs.pop('min_num', 0)
+        self.max_num = kwargs.pop('max_num', None)
+        self.maximum_file_size = kwargs.pop('maximum_file_size', None)
+        super(MultiFileField, self).__init__(*args, **kwargs)
 
-        if user is not None:
-            UserModel = get_user_model()
-            self.user = UserModel._default_manager.get(username=user)
-            self.fields['modules'].choices = self.user.all_modules_choices()
+    def to_python(self, data):
+        ret = []
+        for item in data:
+            ret.append(super(MultiFileField, self).to_python(item))
+        return ret
+
+    def validate(self, data):
+        super(MultiFileField, self).validate(data)
+        num_files = len(data)
+        if len(data) and not data[0]:
+            num_files = 0
+            return
+        if num_files < self.min_num:
+            raise forms.ValidationError(
+                self.error_messages['min_num'] % {'min_num': self.min_num,
+                                                  'num_files': num_files})
+        elif self.max_num and num_files > self.max_num:
+            raise forms.ValidationError(
+                self.error_messages['max_num'] % {'max_num': self.max_num,
+                                                  'num_files': num_files})
+
+        for uploaded_file in data:
+            if uploaded_file.size > self.maximum_file_size:
+                raise forms.ValidationError(
+                    self.error_messages['file_size'] %
+                    {'uploaded_file_name': uploaded_file.name})
+
+            content_type = uploaded_file.content_type
+            if content_type not in settings.CONTENT_TYPES:
+                raise forms.ValidationError(self.error_messages['error_ext'])
+
+        return
+
+
+class ReplyForm(forms.Form):
+    subject = forms.CharField(
+        label=u'标题', max_length=50,
+        widget=forms.TextInput(attrs={'class': 'form-control'}))
+    content = forms.CharField(
+        label=u'内容',
+        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}))
+    uploaded_file = MultiFileField(max_num=10, min_num=0,
+                                   maximum_file_size=settings.MAX_UPLOAD_SIZE)
 
 
 class ProfileForm(forms.Form):
@@ -100,6 +143,9 @@ class ProfileForm(forms.Form):
         'password_incorrect': _("Your old password was entered incorrectly. "
                                 "Please enter it again."),
         'password_mismatch': _("The two password fields didn't match."),
+        'password_same': _("Your old and new password are the same."
+                           "Please enter your passwords again."),
+        'password_required': _("New password is required."),
     }
     first_name = forms.CharField(
         required=False, label=u'First name', max_length=30,
@@ -111,17 +157,22 @@ class ProfileForm(forms.Form):
         )
     email = forms.EmailField(
         label=u"Email", max_length=254,
-        widget=forms.EmailInput(attrs={'class': 'form-control'}))
+        widget=forms.EmailInput(attrs={'class': 'form-control',
+                                       'placeholder': '@pset.suntec.net'})
+        )
 
     old_password = forms.CharField(
         required=False, label=_("Old password"),
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        )
     new_password1 = forms.CharField(
         required=False, label=_("New password"),
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        )
     new_password2 = forms.CharField(
         required=False, label=_("New password confirmation"),
-        widget=forms.PasswordInput(attrs={'class': 'form-control'}))
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+        )
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -132,12 +183,27 @@ class ProfileForm(forms.Form):
         Validates that the old_password field is correct.
         """
         old_password = self.cleaned_data["old_password"]
-        if not self.user.check_password(old_password) and old_password:
+        if old_password and not self.user.check_password(old_password):
             raise forms.ValidationError(
                 self.error_messages['password_incorrect'],
                 code='password_incorrect',
             )
         return old_password
+
+    def clean_new_password1(self):
+        old_password = self.cleaned_data.get("old_password")
+        password1 = self.cleaned_data.get('new_password1')
+        if old_password and not password1:
+            raise forms.ValidationError(
+                self.error_messages['password_required'],
+                code='password_required',
+            )
+        if old_password and old_password == password1:
+            raise forms.ValidationError(
+                self.error_messages['password_same'],
+                code='password_same',
+            )
+        return password1
 
     def clean_new_password2(self):
         password1 = self.cleaned_data.get('new_password1')
@@ -177,6 +243,33 @@ class ProfileForm(forms.Form):
         return self.user
 
 
+class FilterForm(forms.Form):
+    from_date = forms.DateField(label=u'开始时间', input_formats=['%Y-%m-%d'])
+    to_date = forms.DateField(label=u'结束时间', input_formats=['%Y-%m-%d'])
+    status = forms.MultipleChoiceField(
+        label=u'任务状态',
+        choices=StatusControl.objects.all().values_list('id', 'name'),
+        widget=forms.CheckboxSelectMultiple())
+    environment = forms.ModelMultipleChoiceField(
+        label=u'发布环境',
+        queryset=Environment.objects.all(),
+        widget=forms.CheckboxSelectMultiple()
+    )
+
+    def __init__(self, request, *args, **kwargs):
+        super(FilterForm, self).__init__(*args, **kwargs)
+        self.request = request
+        self.user_cache = request.user
+
+        if self.user_cache is None:
+            return
+
+        self.fields['modules'] = forms.MultipleChoiceField(
+            label=u'发布模块', widget=forms.CheckboxSelectMultiple(),
+            choices=[(module.pk, module.name) for module
+                     in modules_can_access(self.user_cache)])
+
+
 class NewTaskForm(forms.ModelForm):
     environment = forms.ModelMultipleChoiceField(
         label=u'发布环境',
@@ -208,27 +301,53 @@ class NewTaskForm(forms.ModelForm):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块', widget=forms.CheckboxSelectMultiple(),
-            choices=self.user_cache.all_modules_choices())
+            choices=[(module.pk, module.name) for module
+                     in modules_can_access(self.user_cache)])
 
     def save(self, commit=True, force_insert=False, eids=None,
              force_update=False, *args, **kwargs):
         task = super(NewTaskForm, self).save(commit=False, *args, **kwargs)
         task.applicant = self.user_cache
+
         task.save()
         self.save_m2m()
 
-        if eids is not None:
-            # Active the first subtask
-            env = Environment.objects.get(pk=eids[0])
-            st = Subtask.objects.create(task=task, environment=env)
-            task.progressing_id = st.pk
-            task.save(update_fields=['progressing_id'])
+        """
+        Create the subtasks using by environment and update progressing_id
+        in task to the pk of the first subtask.
+        """
+        env = Environment.objects.get(pk=eids[0])
+        progressing = task.subtask_set.create(environment=env)
+        task.progressing_id = progressing.pk
+        task.save(update_fields=['progressing_id'])
 
-            for eid in eids[1:]:
-                env = Environment.objects.get(pk=eid)
-                Subtask.objects.create(task=task, environment=env)
+        for eid in eids[1:]:
+            env = Environment.objects.get(pk=eid)
+            task.subtask_set.create(environment=env)
+
+        auditors = list(self._generater_auditors(task))
+        if auditors:
+            task.auditor = auditors[0]
+            task.save(update_fields=['auditor'])
+        else:
+            task.available = True
+            task.auditor = self.user_cache
+            task.save(update_fields=['auditor', 'available'])
+
+            task.make_available()
 
         return task
+
+    def _generater_auditors(self, task):
+        """ Not so good """
+        auditors = set()
+        for module in task.modules.all():
+            role = self.user_cache.role_in_group(module.group)
+            superior = role.superior
+            if superior:
+                auditors.update(superior.user_set.all())
+
+        return auditors
 
 
 class PackageForm(forms.ModelForm):

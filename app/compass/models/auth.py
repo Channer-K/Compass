@@ -380,3 +380,4 @@ class User(MyAbstractUser):
     class Meta(MyAbstractUser.Meta):
         app_label = 'compass'
         swappable = 'AUTH_USER_MODEL'
+

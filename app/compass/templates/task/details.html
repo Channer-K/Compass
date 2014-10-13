@@ -1,9 +1,10 @@
 {% extends "layout/base.html" %}
+{% load compass_tags %}
 {% block sidebar %}
-<div class="col-sm-3 col-md-2 sidebar">
+<div class="sidebar">
   <ul class="nav nav-sidebar">
     <li><a href="{% url 'index' %}">Overview</a></li>
-    <li class="active"><a href="{% url 'tasks' %}">Task<span class="navbar-new">2</span></a></li>
+    <li class="active"><a href="{% url 'tasks' %}">Task</a></li>
   </ul>
 </div>
 {% endblock %}
@@ -11,98 +12,193 @@
 <h1 class="page-header">Details</h1>
 <div class="contentwrapper">
   <div class="contenttitle">
-    <h3>返回的结果中需要增加对ODBII数据的支持<span> —— 上海ITS测试</span></h3>
+    <h3>{{task.amendment}}<span> —— {{req_step.environment}}</span></h3>
   </div>
-  <ul class="process anchor">
-    <li>
-      <a href="#wiz1step1" class="selected" isdone="1" rel="1">
-        <span class="h2">Step 1</span>
-        <span class="dot"><span></span></span>
-        <span class="label">上海ITS测试</span>
-      </a>
-    </li>
-    <li>
-      <a href="#wiz1step2" class="disabled" isdone="0" rel="2">
-        <span class="h2">Step 2</span>
-        <span class="dot"><span></span></span>
-        <span class="label">日本检证</span>
-      </a>
-    </li>
-    <li>
-      <a href="#wiz1step3" class="disabled" isdone="0" rel="3">
-        <span class="h2">Step 3</span>
-        <span class="dot"><span></span></span>
-        <span class="label">日本本番</span>
-      </a>
-    </li>
-  </ul>
+  {% with task.subtask_set.all as subtasks %}
+    {% if subtasks.count == 2 %}
+      <ul class="process anchor">
+        <li>
+          <a href="{% if not subtasks.0.editable %}/history/{{subtasks.0.url_token}}{% else %}{% url 'detail' id=task.pk step=subtasks.0.pk %}{% endif %}"
+             class="{% if subtasks.0.status.selected %}selected{% endif %}"
+             isdone="1" rel="1">
+            <span class="h2">Step 1</span>
+            <span class="dot"><span></span></span>
+            <span class="label">{{subtasks.0.environment.name}}</span>
+          </a>
+        </li>
+        <li>
+          <a href="" isdone="1" rel="2" style="margin-top: 42px;">
+            <span class="h2"></span>
+            <span class="dot"></span>
+            <span class="label" style="margin-top: 21px;"></span>
+          </a>
+        </li>
+        <li>
+          <a href="{% if not subtasks.1.editable %}/{{subtasks.1.url_token}}{% else %}{% url 'detail' id=task.pk step=subtasks.1.pk %}{% endif %}"
+             class="{% if subtasks.1.status.selected %}selected{% endif %}"
+             isdone="1" rel="3">
+            <span class="h2">Step 2</span>
+            <span class="dot"><span></span></span>
+            <span class="label">{{subtasks.1.environment.name}}</span>
+          </a>
+        </li>
+      </ul>
+    {% elif subtasks.count > 2 %}
+      <ul class="process anchor">
+        {% for subtask in subtasks %}
+        <li>
+          <a href="{% if not subtask.editable %}/{{subtask.url_token}}{% else %}{% url 'detail' id=task.pk step=subtask.pk %}{% endif %}"
+             class="{% if subtask.status.selected %}selected{% endif %}"
+             isdone="1" rel="{{forloop.counter}}">
+            <span class="h2">Step {{forloop.counter}}</span>
+            <span class="dot"><span></span></span>
+            <span class="label">{{subtask.environment.name}}</span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endwith %}
   <div id="wiz_content" class="content">
     <div class="row">
-      <p class="col-md-6"><b>申请人：</b><span>Channer</span></p>
-      <p class="col-md-6"><b>申请时间：</b><span>August 10, 2014 15:21:12</span></p>
+      <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
+      <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at}}</span></p>
     </div>
     <div class="row">
-      <p class="col-md-6"><b>发布版本：</b><span>v204.1.0</span></p>
-      <p class="col-md-6"><b>发布模块：</b><span>navisocial</span></p>
+      <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
+      <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
     </div>
     <div class="row">
-      <p class="col-md-6"><b>当前状态：</b><span>发布中</span></p>
-      <p class="col-md-6"><b>发布日期：</b><span>August 10, 2014</span></p>
+      <p class="col-md-6"><b>当前状态：</b><span id="current_status">
+          {{req_step.status.name}}{% if req_step.task.info %}（{{req_step.task.info}}）{% endif %}
+      </span></p>
+      <p class="col-md-6"><b>发布日期：</b><span>{{req_step.pub_date|default:"待定"}}</span></p>
     </div>
-    <p><b>发布人：</b><span>fhq</span></p>
-    <p><b>确认人：</b><span>admin</span></p>
+    <p><b>发布人：</b><span>
+      {{req_step.assignee|default:"未指定"}}
+    </span></p>
+    <p><b>确认人：</b><span>{{task.auditor}}</span></p>
+    <p><b>修改说明：</b>
+    <pre>{{task.explanation}}</pre>
+    </p>
     <p><b>备注</b>：
-    <p>Notification文件修改情况：
-    /trunk/src/NotificationAPI/src/net/suntect/abc/abc/abc/abc/SendToUsersServlet.java
-    /trunk/src/NotificationAPI/src/net/suntect/abc/abc/abc/abc/SendToUsersServlet.java
+    <pre>{{task.comment|default:"无"}}</pre>
     </p>
     <p><b>发布包：</b>
-      <br><small>http://172.26.10.31/ITS_CarCon/trunk/12_运维/ReleaseManagement/ReleaseTestResult/日本本番环境/20140417/prd-dir-20140806.v204.1.2.tar.gz</small>
-      <br><small>http://172.26.10.31/ITS_CarCon/trunk/12_运维/ReleaseManagement/ReleaseTestResult/日本本番环境/20140417/prd-sns-20140806.v204.1.2.tar.gz</small>
-      <br><small>http://172.26.10.31/ITS_CarCon/trunk/12_运维/ReleaseManagement/ReleaseTestResult/日本本番环境/20140417/prd-common-20140806.v204.1.2.tar.gz</small>
+      {% for package in task.package_set.all %}
+        <p>{{package.get_absolute_path}}</p>
+      {% endfor %}
     </p>
-    <p><b>操作：</b>
-      <p>
-        <a href="#" class="btn btn-info btn-small"><span class="fui-check"></span> 确 认</a>
-        <a href="#" class="btn btn-warning btn-small"><span class="fui-cross"></span> 取消</a>
-      </p>
-    </p>
-    <div class="reply">
-      <h4>Reply</h4>
-      <div class="wrap-reply">
-        <div class="row">
-          <h5>发布成功</h5><a href="#" title="id_reply">#2</a>
-        </div>
-        <div class="comment">
-          <div>
-            <p>测试脚本显示ITS环境没有问题，请确认！具体还要和客户端联调来确保是否还有其他问题。</p>
-            <p>数据包和应用包都已经做好参数替换，放置位置如下:</p>
+    {% if req_step.editable %}
+      <p><b>操作：</b></p>
+      {% with req_step|can_execute:user as ctrl_cls %}
+        {% if ctrl_cls %}
+          {% include ""|add:ctrl_cls.template %}
+          <small>注意：以上操作只影响当前正在进行的任务</small>
+        {% endif %}
+        {% if perms.compass.forcing_close%}
+        <p>
+          <button id="forcing-close" class="btn btn-danger btn-sm">撤销所有发布</button>
+          <div id="close-div" title="强制撤销" style="display: none; width: 400px;">
+            <form id="terminate-form" action="{% url 'terminate' %}" method="POST" role="form">
+              {% csrf_token %}
+              <input type="hidden" name="tid" value="{{task.pk}}">
+              <div class="row">
+                <label class="col-sm-3 control-label">请输入撤销理由：</label>
+                <div class="col-sm-9">
+                  <input class="form-control" type="text" name="info" id="info_id">
+                </div>
+              </div>
+            </form>
           </div>
-        </div>
-        <div class="read-more"></div>
-        <small>Updated by <strong>admin</strong> - August 10, 2014 15:21:12</small>
-      </div>
-      <div class="wrap-reply">
-        <div class="row">
-          <h5>请快点安排发布</h5><a href="#" title="id_reply">#1</a>
-        </div>
-        <div class="comment">
-          <div>
-            <p>日本决定于日本时间8.7上午10点，正式公开14春602版本地图。同时还有王星雨那里对应“发布时交通情报减少”这个问题的相关发布。所以这里和各位确认下本次发布的发布包。需要注意的是：由于本番环境没有发布过600，601的版本，是直接在401地图的基础上发布的。日本决定于日本时间8.7上午10点，正式公开14春602版本地图。同时还有王星雨那里对应“发布时交通情报减少”这个问题的相关发布。所以这里和各位确认下本次发布的发布包。需要注意的是：由于本番环境没有发布过600，601的版本，是直接在401地图的基础上发布的。</p>
-          </div>
-        </div>
-        <div class="read-more"></div>
-        <div class="attachment">
-          <p class="glyphicon glyphicon-paperclip"><a href="#"> Notification.log</a></p>
-        </div>
-        <small>Updated by <strong>Channer</strong> - August 10, 2014 15:21:12</small>
-      </div>
-      <form id="reply_form" action="#" role="form" method="post">
-        <textarea class="form-control" rows="4"></textarea>
-        <p style="margin-top: 20px;">
-          <a id="id_reply" href="javascript:;" class="btn btn-info btn-small">快速回复</a>
         </p>
-      </form>
+        <small>撤销发布之后所有环境的发布工作都将终止，请谨慎操作！</small>
+        <script>
+        $('#forcing-close').click(function(){
+          $("#close-div").dialog({
+            resizable: false,
+            height:180,
+            width:600,
+            modal: true,
+            buttons: {
+              "确认撤销": function() {
+                $('#terminate-form').submit();
+                $( this ).dialog("close");
+              },
+              "取消": function() {
+                $( this ).dialog("close");
+              }
+            },
+            open:function () {
+              $(this).closest(".ui-dialog").find("button").each(function(){
+                $(this).addClass("btn btn-primary");
+                $(this).css("font-size", "12px");
+              });
+            }
+          });
+        });
+        </script>
+        {% endif %}
+        {% if not ctrl_cls and not perms.compass.forcing_close %}
+          <p>暂无可用操作</p>
+        {% endif %}
+      {% endwith %}
+    {% endif %}
+    <div class="reply">
+      <h4>Comments</h4>
+      {% for reply in req_step.reply_set.all %}
+        <div class="wrap-reply">
+          <div class="row">
+            <h6 style="margin-top: 0;">{{reply.subject}}</h6><a href="#" title="id_reply">#{{forloop.revcounter}}</a>
+          </div>
+          <div class="comment">
+            <div>
+              <pre>{{reply.content}}</pre>
+            </div>
+          </div>
+          <div class="read-more"></div>
+          {% with reply.attachment_set.all as attachments %}
+            {% if attachments %}
+            {% for attchment in attachments %}
+              <div class="attachment">
+                <span class="glyphicon glyphicon-paperclip"><a href="{{attchment.upload.url}}"> {{attchment.upload.name|slice:"11:"}}</a></span>
+              </div>
+            {% endfor %}
+            {% endif %}
+          {% endwith %}
+          <small>Updated by <strong>{{reply.user}}</strong> - {{reply.created_at}}</small>
+        </div>
+      {% endfor %}
+      {% if req_step.editable %}
+      <div class="well">
+        <form id="reply_form" action="{{request.get_full_path}}" role="form" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="step" value="{{req_step.pk}}">
+          {% csrf_token %}
+          <div class="form-group {% if form.subject.errors %}has-error{% endif %}">
+            <label for="{{form.subject.id_for_label}}">{{form.subject.label}}</label>
+              {{form.subject}}
+              <span>{{form.subject.errors}}</span>
+          </div>
+          <p>
+          <div class="form-group {% if form.content.errors %}has-error{% endif %}">
+            <label for="{{form.content.id_for_label}}">{{form.content.label}}</label>
+              {{form.content}}
+              <span>{{form.content.errors}}</span>
+            </div>
+          </p>
+          <p>
+            <div class="form-group {% if form.uploaded_file.errors %}has-error{% endif %}">
+              <label for="{{form.uploaded_file.id_for_label}}">{{form.uploaded_file.label}}</label>
+              {{form.uploaded_file}}
+              <span>{{form.uploaded_file.errors}}</span>
+            </div>
+          </p>
+          <p style="margin-top: 20px;">
+            <button type="submit" class="btn btn-info btn-sm">快速回复</button>
+          </p>
+        </form>
+      </div>
+      {% endif %}
     </div>
   </div>
 </div>

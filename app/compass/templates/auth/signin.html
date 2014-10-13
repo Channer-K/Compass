@@ -1,4 +1,19 @@
 {% include 'layout/header.html' %}
+<style>
+  body {
+    color: #222;
+    background: #000 url('/static/images/background.jpeg');
+    background-size: cover;
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+  }
+  #footer {
+    position: absolute;
+  }
+</style>
 <nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
   <div class="container-fluid">
     <div class="navbar-header">
@@ -9,19 +24,19 @@
 <div class="container">
   <div id="sign-div">
     <div id="container-div">
-      <div class="sign-header">
+      <div class="sign-header page-header" style="margin-bottom: 10px;">
       <p>Sign in</p>
       <span class="fui-lock"></span>
       </div>
       <div class="sign-content">
-        <form class="form sign-form" role="form" method="post" action=".">
+        <form class="form" role="form" method="post" action=".">
           <div style="height: 40px;">
             {{ form.non_field_errors }}
           </div>
           {% csrf_token %}
           <input type="hidden" name="next" value="{{next}}" />
           <div class="form-group">
-            <input class="form-control" type="text" name="username" placeholder="Username" required="required" autofocus>
+            <input class="form-control" type="text" name="username" placeholder="Username/Login Account" required="required" autofocus>
             <span class="input-icon fui-user"></span>
           </div>
           <div class="form-group">
@@ -29,15 +44,17 @@
             <span class="input-icon fui-lock"></span>
           </div>
           <div class="row">
-            <div class="col-md-6 col-md-offset-6">
+            <div class="col-md-6">
+              <button type="submit" class="btn btn-block btn-primary" style="height: 42px;">
+                <span class="glyphicon glyphicon-log-in"> Sign in</span>
+              </button>
+            </div>
+            <div class="col-md-6">
               <div class="sign-forget">
-              <p>Forget <a href="#">Password?</a></p>
+              <a href="{% url 'forgetpasswd' %}">Forget Password?</a>
               </div>
             </div>
           </div>
-          <button type="submit" class="mybtn btn btn-block btn-info">
-            <span class="glyphicon glyphicon-log-in"> Sign in</span>
-          </button>
         </form>
       </div>
     </div>
