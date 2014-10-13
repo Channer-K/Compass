@@ -9,8 +9,10 @@ Thumbs.db
 ######################
 *.log
 
-app/app/settings.py
-app/app/settings.pyc
+app/app/
+app/compass/snapshots/
+app/compass/upload/
+app/compass/fixtures/
 venv/
 
 *.pyc
