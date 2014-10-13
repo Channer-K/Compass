@@ -32,4 +32,4 @@ CONTENT_TYPES = [
 # Specify a max value for the size of uploaded file
 MAX_UPLOAD_SIZE = 1024*1024*10
 
-SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
+SYSTEM_EMAIL = 'system_info@pset.suntec.net'
