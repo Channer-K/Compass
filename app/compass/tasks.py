@@ -4,6 +4,7 @@ from __future__ import absolute_import
 import datetime
 from app.celery import app
 from compass.conf import settings
+from app.conf import settings as djsettings
 from django.template import Context
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
@@ -45,7 +46,7 @@ def automatic_dist():
         for st in w_subtasks:
             delta = datetime.datetime.now()-st.updated_at
 
-            if (delta.total_seconds() / 60) >= 1:
+            if (delta.total_seconds() / djsettings.SCHEDULE_PERIOD) >= 1:
                 pub_date = datetime.datetime.now()+datetime.timedelta(hours=2)
 
                 st.assignee = get_right_assignee()
@@ -53,3 +54,10 @@ def automatic_dist():
                 st.status = st.get_next_status()
 
                 st.save(update_fields=['assignee', 'pub_date', 'status'])
+
+                subject = u'【新任务】'+"("+st.status.name+")"+st.task.amendment
+                send_email.delay(
+                    subject=subject,
+                    to=[st.assignee.email], template_name='new_task',
+                    extra_context={'task_title': st.task.amendment,
+                                   'version': st.task.version})       

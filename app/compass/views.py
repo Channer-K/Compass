@@ -186,7 +186,7 @@ def task_detail(request, id, step):
             403, 'You do not have sufficient permissions to access this page.'
             )
     if not req_step.editable:
-        return redirect('/history/%s' % req_step.url_token)
+        return redirect('/history/%s.html' % req_step.url_token)
 
     if request.method == 'POST':
         form = ReplyForm(request.POST, request.FILES)
@@ -229,7 +229,7 @@ def task_go_next(request):
             )
 
     if not req_step.editable:
-        return redirect('/%s' % req_step.url_token)
+        return redirect('/history/%s.html' % req_step.url_token)
 
     req_step.go_run(request)
 

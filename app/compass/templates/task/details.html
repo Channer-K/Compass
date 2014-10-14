@@ -18,7 +18,7 @@
     {% if subtasks.count == 2 %}
       <ul class="process anchor">
         <li>
-          <a href="{% if not subtasks.0.editable %}/history/{{subtasks.0.url_token}}{% else %}{% url 'detail' id=task.pk step=subtasks.0.pk %}{% endif %}"
+          <a href="{% if not subtasks.0.editable %}/history/{{subtasks.0.url_token}}.html{% else %}{% url 'detail' id=task.pk step=subtasks.0.pk %}{% endif %}"
              class="{% if subtasks.0.status.selected %}selected{% endif %}"
              isdone="1" rel="1">
             <span class="h2">Step 1</span>
@@ -34,7 +34,7 @@
           </a>
         </li>
         <li>
-          <a href="{% if not subtasks.1.editable %}/{{subtasks.1.url_token}}{% else %}{% url 'detail' id=task.pk step=subtasks.1.pk %}{% endif %}"
+          <a href="{% if not subtasks.1.editable %}/history/{{subtasks.1.url_token}}.html{% else %}{% url 'detail' id=task.pk step=subtasks.1.pk %}{% endif %}"
              class="{% if subtasks.1.status.selected %}selected{% endif %}"
              isdone="1" rel="3">
             <span class="h2">Step 2</span>
@@ -47,7 +47,7 @@
       <ul class="process anchor">
         {% for subtask in subtasks %}
         <li>
-          <a href="{% if not subtask.editable %}/{{subtask.url_token}}{% else %}{% url 'detail' id=task.pk step=subtask.pk %}{% endif %}"
+          <a href="{% if not subtask.editable %}/history/{{subtask.url_token}}.html{% else %}{% url 'detail' id=task.pk step=subtask.pk %}{% endif %}"
              class="{% if subtask.status.selected %}selected{% endif %}"
              isdone="1" rel="{{forloop.counter}}">
             <span class="h2">Step {{forloop.counter}}</span>
