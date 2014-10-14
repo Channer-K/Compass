@@ -4,7 +4,7 @@ from __future__ import absolute_import
 import datetime
 from app.celery import app
 from compass.conf import settings
-from app.conf import settings as djsettings
+from django.conf import settings as djsettings
 from django.template import Context
 from django.template.loader import render_to_string
 from django.core.mail import EmailMultiAlternatives
@@ -56,8 +56,13 @@ def automatic_dist():
                 st.save(update_fields=['assignee', 'pub_date', 'status'])
 
                 subject = u'【新任务】'+"("+st.status.name+")"+st.task.amendment
-                send_email.delay(
-                    subject=subject,
-                    to=[st.assignee.email], template_name='new_task',
-                    extra_context={'task_title': st.task.amendment,
-                                   'version': st.task.version})       
+                contxt = {'applicant': st.task.applicant,
+                          'at_time': st.task.created_at,
+                          'task_title': st.task.amendment,
+                          'version': st.task.version
+                          }
+
+                send_email.delay(subject=subject,
+                                 to=[st.assignee.email],
+                                 template_name='schedule',
+                                 extra_context=contxt)
