@@ -44,12 +44,6 @@ class TaskProcessingBase(object):
         if subject is None:
             subject = u'【更新】' + self.task.amendment
 
-        # for debug
-        if to is None:
-            realemail = self.task.applicant.username
-        else:
-            realemail = ",".join(list(to))
-
         to = [self.task.applicant.email] if to is None else list(to)
 
         if self.obj.editable:
@@ -62,8 +56,7 @@ class TaskProcessingBase(object):
             url = request.build_absolute_uri("/history/"+self.obj.url_token)
 
         ctx = {'url': url, 'at_time': self.task.created_at,
-               'applicant': self.task.applicant,
-               'realemail': realemail}
+               'applicant': self.task.applicant}
 
         if extra_context is not None:
             ctx.update(extra_context)
