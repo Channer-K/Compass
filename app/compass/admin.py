@@ -91,9 +91,28 @@ class MyGroupAdmin(MPTTModelAdmin):
     filter_horizontal = ('permissions',)
 
 
+class RoleChangeForm(forms.ModelForm):
+
+    class Meta:
+        model = models.Role
+        fields = ('name', 'group', 'superior', 'permissions',)
+
+
+class RoleCreationForm(forms.ModelForm):
+    is_leader = forms.ChoiceField(label=u'职位类型',
+                                  choices=((0, 'Staff'), (1, 'Leader'),),
+                                  initial=0, widget=forms.RadioSelect)
+
+    class Meta:
+        model = models.Role
+        fields = ('name', 'group', 'superior', 'is_leader', 'permissions',)
+
+
 class RoleAdmin(admin.ModelAdmin):
-    fields = ('name', 'group', 'superior', 'permissions',)
-    list_display = ('name', 'group',)
+    form = RoleChangeForm
+    add_form = RoleCreationForm
+
+    list_display = ('name', 'group', 'superior', 'is_leader')
     filter_horizontal = ('permissions',)
 
 

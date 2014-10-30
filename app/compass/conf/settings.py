@@ -32,6 +32,6 @@ CONTENT_TYPES = [
 # Specify a max value for the size of uploaded file
 MAX_UPLOAD_SIZE = 1024*1024*10
 
-SYSTEM_EMAIL = 'root@websys.admin'
+SYSTEM_EMAIL = 'no-reply@compass'
 
 SCHEDULE_PERIOD = 60*30

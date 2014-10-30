@@ -80,6 +80,9 @@ class Role(models.Model):
                                  related_name='subordinate_set',
                                  related_query_name='subordinate')
     group = models.ForeignKey(Group)
+    is_leader = models.BooleanField(
+        _('leader'), default=False,
+        help_text=_('Designates that this role is leader or just staff.'))
     permissions = models.ManyToManyField(
         Permission, blank=True,
         verbose_name=_('permissions'))
@@ -92,6 +95,10 @@ class Role(models.Model):
 
 
 class MyPermissionsMixin(models.Model):
+    is_superuser = models.BooleanField(
+        _('superuser status'), default=False,
+        help_text=_('Designates that this user has all permissions without '
+                    'explicitly assigning them.'))
     groups = models.ManyToManyField(
         Group,
         verbose_name=_('groups'),
@@ -153,7 +160,8 @@ class MyPermissionsMixin(models.Model):
 
 
 class MyUserManager(BaseUserManager):
-    def _create_user(self, username, email, password, **extra_fields):
+    def _create_user(self, username, email, password,
+                     is_staff, is_superuser, **extra_fields):
         """
         Creates and saves a User with the given username, email and password.
         """
@@ -162,22 +170,26 @@ class MyUserManager(BaseUserManager):
             raise ValueError('The given username must be set')
         email = MyUserManager.normalize_email(email)
         user = self.model(username=username, email=email,
+                          is_staff=is_staff, is_active=True,
+                          is_superuser=is_superuser,
                           last_login=now, created_at=now, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
     def create_user(self, username, email, password=None, **extra_fields):
-        return self._create_user(username, email, password, **extra_fields)
+        return self._create_user(username, email, password, False, False,
+                                 **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
-        admin_group = Group.objects.get_or_create(name='administrator')[0]
-        admin_role = Role.objects.get_or_create(name='administrator',
-                                                group=admin_group)[0]
-        admin = self._create_user(username, email, password, **extra_fields)
-        admin.roles.add(admin_role)
-        admin.groups.add(admin_group)
-        return admin
+        #admin_group = Group.objects.get_or_create(name='administrator')[0]
+        #admin_role = Role.objects.get_or_create(name='administrator',
+        #                                        group=admin_group)[0]
+        return self._create_user(username, email, password, True, True,
+                                 **extra_fields)
+        #admin.roles.add(admin_role)
+        #admin.groups.add(admin_group)
+        #return admin
 
 
 class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
@@ -197,6 +209,10 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         _('active'), default=True,
         help_text=_('Designates whether this user should be treated as '
                     'active. Unselect this instead of deleting accounts.'))
+    is_staff = models.BooleanField(
+        _('staff status'), default=False,
+        help_text=_('Designates whether the user can log into this admin '
+                    'site.'))
     at_work = models.BooleanField(
         _('work status'), default=True,
         help_text=_('Unselect this any tasks won\'t be assigned to you.'))
@@ -232,7 +248,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         groups = set()
 
         for group in direct_groups:
-            ancestors = group.get_ancestors().all()
+            ancestors = group.get_ancestors(include_self=True).all()
             for anc in ancestors:
                 groups.add(anc)
             groups.add(group)
@@ -344,19 +360,6 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         return role[0]
 
     @property
-    def is_superuser(self):
-        """ hard coding here """
-        if (self.roles.filter(name='administrator') or
-                self.groups.filter(name='administrator')):
-            return True
-
-        return False
-
-    @property
-    def is_staff(self):
-        return self.is_superuser
-
-    @property
     def is_leader(self):
         for role in self.roles.all():
             """ hard coding here """
@@ -380,4 +383,3 @@ class User(MyAbstractUser):
     class Meta(MyAbstractUser.Meta):
         app_label = 'compass'
         swappable = 'AUTH_USER_MODEL'
-

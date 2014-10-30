@@ -18,7 +18,9 @@ from django.views.decorators.debug import sensitive_post_parameters
 @login_required
 def index(request):
     tasks = permissions.tasks_can_access(request.user)
-    approvals = tasks.filter(available=False).filter(editable=True).filter(auditor=request.user)
+    approvals = tasks.filter(available=False,
+                             editable=True,
+                             auditor=request.user)
 
     from django.core.exceptions import ObjectDoesNotExist
     try:

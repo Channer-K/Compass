@@ -31,6 +31,11 @@ def get_due_date_string(value):
             "day" if abs(delta.days) == 1 else "days"))
 
 
+@register.filter(name='mod')
+def mod(value, arg):
+    return value % arg
+
+
 @register.filter(name='can_execute')
 def can_execute(subtask, user):
 

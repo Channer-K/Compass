@@ -82,39 +82,43 @@
   <div class="contenttitle">
     <h3>Task List</h3>
   </div>
-  {% for task in tasks %}
-    <div class="panel-group" id="accordion{{forloop.counter}}">
-    <div class="panel panel-default">
-      <div class="panel-heading {% if task.in_progress.status.mark > 0 %}panel-success{% elif task.in_progress.status.mark < 0 %}panel-failure{% endif %}">
-        <h4 class="panel-title">
-          <a data-toggle="collapse" data-parent="#accordion{{forloop.counter}}" href="#collapse{{forloop.counter}}">
-            {{task.amendment}} - {{task.version}} - {{task.created_at|get_due_date_string}}
-          </a>
-        </h4>
-      </div>
-      <div id="collapse{{forloop.counter}}" class="panel-collapse collapse {% if task.editable %}in{% endif %}">
-        <div class="panel-body">
-          <div class="row">
-            <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
-            <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at}}</span></p>
+  {% if tasks %}
+    {% for task in tasks %}
+      <div class="panel-group" id="accordion{{forloop.counter}}">
+      <div class="panel panel-default">
+        <div class="panel-heading {% if task.in_progress.status.mark > 0 %}panel-success{% elif task.in_progress.status.mark < 0 %}panel-failure{% endif %}">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion{{forloop.counter}}" href="#collapse{{forloop.counter}}">
+              {{task.amendment}} - {{task.version}} - {{task.created_at|get_due_date_string}}
+            </a>
+          </h4>
+        </div>
+        <div id="collapse{{forloop.counter}}" class="panel-collapse collapse {% if task.editable %}in{% endif %}">
+          <div class="panel-body">
+            <div class="row">
+              <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
+              <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at}}</span></p>
+            </div>
+            <div class="row">
+              <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
+              <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
+            </div>
+            <div class="row">
+              <p class="col-md-6"><b>发布情况：</b><span>{{task.in_progress.status.name}}{% if task.info %}（{{task.info}}）{% endif %}</span></p>
+              <p class="col-md-6"><b>当前环境：</b><span>{{task.in_progress.environment.name}}</span></p>
+            </div>
+            <p><b>确认人：</b><span>{{task.auditor.username}}</span></p>
+            <p><b>备注</b>：
+            <p>{{task.comment|default:"无"|ellipses:120}}</p>
+            <p><a href="{%url 'detail' id=task.pk step=task.in_progress.pk %}">查看详情</a></p>
           </div>
-          <div class="row">
-            <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
-            <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
-          </div>
-          <div class="row">
-            <p class="col-md-6"><b>发布情况：</b><span>{{task.in_progress.status.name}}{% if task.info %}（{{task.info}}）{% endif %}</span></p>
-            <p class="col-md-6"><b>当前环境：</b><span>{{task.in_progress.environment.name}}</span></p>
-          </div>
-          <p><b>确认人：</b><span>{{task.auditor.username}}</span></p>
-          <p><b>备注</b>：
-          <p>{{task.comment|default:"无"|ellipses:120}}</p>
-          <p><a href="{%url 'detail' id=task.pk step=task.in_progress.pk %}">查看详情</a></p>
         </div>
       </div>
-    </div>
-    </div>
-  {% endfor %}
+      </div>
+    {% endfor %}
+  {% else %}
+  <div>任务列表为空</div>
+  {% endif %}
   {% if tasks.paginator.num_pages > 1 %}
   <div class="panel-group" style="text-align: center;">
     <div class="pagination">

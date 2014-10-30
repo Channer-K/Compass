@@ -47,7 +47,7 @@ def modules_can_access(user):
         for group in user.get_subordinate_groups():
             modules.update(group.module_set.all())
     else:
-        for group in user.groups.all():
+        for group in user.get_all_groups():
             for module in group.module_set.all():
                 modules.add(module)
 

@@ -49,9 +49,9 @@ class TaskProcessingBase(object):
         if self.obj.editable:
             from compass.views import task_detail
             url = request.build_absolute_uri(
-                reverse(task_detail, kwargs={
-                        'id': self.task.pk, 'step': self.obj.pk})
-            )
+                reverse(task_detail, kwargs={'id': self.task.pk,
+                                             'step': self.obj.pk}
+                        ))
         else:
             url = request.build_absolute_uri("/history/"+self.obj.url_token)
 
@@ -171,7 +171,6 @@ class WaitingForAudit(TaskProcessingBase):
 
         if scls:
             scls.send_email(request)
-
         return
 
     def decline(self, request):
@@ -501,7 +500,7 @@ class Confirmation(TaskProcessingBase):
             self.task.next_progressing()
         elif opt == 'no':
             FailurePost(obj=self.obj).run(request)
-            
+
         return
 
     def send_email(self, request):

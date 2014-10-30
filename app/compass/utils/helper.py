@@ -57,8 +57,7 @@ class StaticUrls(object):
                 # i add path and url to a list
                 if res.endswith(".html"):
                     files.append({
-                        "url": os.path.join(
-                            path, res.replace(".html", "")),
+                        "url": os.path.join(path, res),
                         "file": os.path.join(path, res),
                     })
 

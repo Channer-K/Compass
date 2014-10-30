@@ -146,29 +146,35 @@
     {% endif %}
     <div class="reply">
       <h4>Comments</h4>
-      {% for reply in req_step.reply_set.all %}
-        <div class="wrap-reply">
-          <div class="row">
-            <h6 style="margin-top: 0;">{{reply.subject}}</h6><a href="#" title="id_reply">#{{forloop.revcounter}}</a>
-          </div>
-          <div class="comment">
-            <div>
-              <pre>{{reply.content}}</pre>
-            </div>
-          </div>
-          <div class="read-more"></div>
-          {% with reply.attachment_set.all as attachments %}
-            {% if attachments %}
-            {% for attchment in attachments %}
-              <div class="attachment">
-                <span class="glyphicon glyphicon-paperclip"><a href="{{attchment.upload.url}}"> {{attchment.upload.name|slice:"11:"}}</a></span>
+      {% with req_step.reply_set.all as replies %}
+        {% if replies %}
+          {% for reply in replies %}
+            <div class="wrap-reply">
+              <div class="row">
+                <h6 style="margin-top: 0;">{{reply.subject}}</h6><a href="#" title="id_reply">#{{forloop.revcounter}}</a>
               </div>
-            {% endfor %}
-            {% endif %}
-          {% endwith %}
-          <small>Updated by <strong>{{reply.user}}</strong> - {{reply.created_at}}</small>
-        </div>
-      {% endfor %}
+              <div class="comment">
+                <div>
+                  <pre>{{reply.content}}</pre>
+                </div>
+              </div>
+              <div class="read-more"></div>
+              {% with reply.attachment_set.all as attachments %}
+                {% if attachments %}
+                {% for attchment in attachments %}
+                  <div class="attachment">
+                    <span class="glyphicon glyphicon-paperclip"><a href="{{attchment.upload.url}}"> {{attchment.upload.name|slice:"11:"}}</a></span>
+                  </div>
+                {% endfor %}
+                {% endif %}
+              {% endwith %}
+              <small>Updated by <strong>{{reply.user}}</strong> - {{reply.created_at}}</small>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>暂无评论</p>
+        {% endif %}
+      {% endwith %}
       {% if req_step.editable %}
       <div class="well">
         <form id="reply_form" action="{{request.get_full_path}}" role="form" method="post" enctype="multipart/form-data">
