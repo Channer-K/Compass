@@ -3,7 +3,7 @@ import datetime
 from compass.conf import settings
 from django.contrib import messages
 from django.utils import timezone
-from compass.tasks import send_email as MailNotify
+from compass.tasks import send_email as mailNotify
 from django.core.urlresolvers import reverse
 from compass.utils.helper import httpForbidden
 
@@ -49,19 +49,19 @@ class TaskProcessingBase(object):
         if self.obj.editable:
             from compass.views import task_detail
             url = request.build_absolute_uri(
-                reverse(task_detail, kwargs={'id': self.task.pk,
-                                             'step': self.obj.pk}
+                reverse(task_detail, kwargs={'tid': self.task.pk,
+                                             'sid': self.obj.pk}
                         ))
         else:
             url = request.build_absolute_uri("/history/"+self.obj.url_token)
 
         ctx = {'url': url, 'at_time': self.task.created_at,
-               'applicant': self.task.applicant}
+               'username': self.task.applicant}
 
         if extra_context is not None:
             ctx.update(extra_context)
 
-        MailNotify.delay(subject=subject, to=to, template_name=template_name,
+        mailNotify.delay(subject=subject, to=to, template_name=template_name,
                          extra_context=ctx)
 
     @property
@@ -464,7 +464,9 @@ class Posting(TaskProcessingBase):
         SA_Leader_Role = Role.objects.get(pk=settings.SA_LEADER_RID)
         SA_Leader = SA_Leader_Role.user_set.all()[0]
 
-        to = [self.task.applicant.email, SA_Leader.email]
+        to = [SA_Leader.email,
+              self.task.applicant.email,
+              self.obj.assignee.email]
 
         extra_context = {'username': self.obj.assignee.username,
                          'at_time': self.obj.pub_date,

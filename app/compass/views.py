@@ -52,15 +52,12 @@ def forget_password(request):
         user.set_password(new_password)
         user.save()
 
-        send_email.delay(
-            subject='New Password',
-            to=[user.email],
-            template_name='forget_passwd',
-            extra_context={'new_password': new_password}
-        )
+        send_email.delay(subject='New Password', to=[user.email],
+                         template_name='forget_passwd',
+                         extra_context={'new_password': new_password})
 
-        messages.success(
-            request, 'Please change your new password just in time.')
+        messages.success(request,
+                         'Please change your new password just in time.')
 
         return redirect('/signin/')
 
@@ -163,13 +160,14 @@ def new_task(request):
             """ Notify superior if task created successfully """
             scls = task.in_progress().get_ctrl_cls()
             if scls:
-                scls.send_email(request, to=[task.auditor.email])
+                to = None if task.available else [task.auditor.email]
+                scls.send_email(request, to=to)
 
             messages.success(request,
                              'A new task has been created successfully.')
 
             return redirect(task_detail,
-                            id=task.pk, step=task.in_progress().pk)
+                            tid=task.pk, sid=task.in_progress().pk)
     else:
         form = NewTaskForm(request)
         formset = PackagesFormSet()
@@ -178,37 +176,14 @@ def new_task(request):
 
 
 @login_required
-def task_detail(request, id, step):
-    task = get_object_or_404(Task, pk=id)
-    req_step = get_object_or_404(task.subtask_set, pk=step)
+def task_detail(request, tid, sid):
+    task = get_object_or_404(Task, pk=tid)
 
-    # permission checks
-    if not permissions.can_read_task(request.user, req_step):
-        return httpForbidden(
-            403, 'You do not have sufficient permissions to access this page.'
-            )
-    if not req_step.editable:
-        return redirect('/history/%s.html' % req_step.url_token)
+    subtask = _check_permission(sid, request.user)
 
-    if request.method == 'POST':
-        form = ReplyForm(request.POST, request.FILES)
-        if form.is_valid():
-            reply = Reply(subtask=req_step, user=request.user,
-                          subject=request.POST.get('subject'),
-                          content=request.POST.get('content'))
-            reply.save()
+    context = {'task': task, 'req_step': subtask, 'form': ReplyForm()}
 
-            files = request.FILES.getlist('uploaded_file')
-            for afile in files:
-                Attachment.objects.create(reply=reply, upload=afile)
-
-            return redirect(task_detail, id=task.pk, step=req_step.pk)
-    else:
-        form = ReplyForm()
-
-    context = {'task': task, 'req_step': req_step, 'form': form}
-
-    ctrl_cls = req_step.get_ctrl_cls()
+    ctrl_cls = subtask.get_ctrl_cls()
     if ctrl_cls:
         extra_context = ctrl_cls.extra_context(request)
         if extra_context is not None:
@@ -219,26 +194,55 @@ def task_detail(request, id, step):
 
 @login_required
 def task_go_next(request):
-    if 'step' not in request.POST:
+    if 'sid' not in request.POST:
         return httpForbidden(400, 'Bad request.')
 
-    req_step = get_object_or_404(Subtask, pk=request.POST['step'])
+    subtask = _check_permission(request.POST['sid'], request.user)
 
-    # permission checks
-    if not permissions.can_read_task(request.user, req_step):
-        return httpForbidden(
-            403, 'You do not have sufficient permissions to access this page.'
-            )
+    subtask.go_run(request)
 
-    if not req_step.editable:
-        return redirect('/history/%s.html' % req_step.url_token)
-
-    req_step.go_run(request)
-
-    return redirect(task_detail,
-                    id=req_step.task.pk, step=req_step.pk)
+    return redirect(task_detail, tid=subtask.task.pk, sid=subtask.pk)
 
 
+@login_required
+def post_reply(request, tid, sid):
+    subtask = _check_permission(sid, request.user)
+    task = subtask.task
+
+    if request.method == 'POST':
+        form = ReplyForm(request.POST, request.FILES)
+        if form.is_valid():
+            reply = Reply(subtask=subtask, user=request.user,
+                          subject=request.POST.get('subject'),
+                          content=request.POST.get('content'))
+            reply.save()
+
+            files = request.FILES.getlist('uploaded_file')
+            for afile in files:
+                Attachment.objects.create(reply=reply, upload=afile)
+
+            url = request.build_absolute_uri(
+                reverse(task_detail, kwargs={'tid': tid, 'sid': sid})
+                )
+
+            extra_context = {'url': url,
+                             'username': request.user,
+                             'at_time': task.created_at,
+                             'message': request.POST.get('content')}
+
+            stakeholders = task.get_stakeholders(exclude=[request.user])
+
+            send_email.delay(subject=u'【新回复】' + task.amendment,
+                             to=[u.email for u in stakeholders],
+                             extra_context=extra_context)
+
+            return redirect(task_detail, tid=tid, sid=sid)
+
+    return httpForbidden(403, 'You do not have sufficient permissions to '
+                              'access this page.')
+
+
+@login_required
 def task_terminate(request):
     user = request.user
     task = get_object_or_404(Task, pk=request.POST.get('tid'))
@@ -254,6 +258,7 @@ def task_terminate(request):
     return redirect(tasks)
 
 
+@login_required
 def filter(request):
     from datetime import datetime
 
@@ -307,3 +312,16 @@ def filter(request):
     print tasks
 
     return HttpResponse("ok")
+
+
+def _check_permission(subtask_id, user):
+    subtask = get_object_or_404(Subtask, pk=subtask_id)
+
+    if not permissions.can_read_task(user, subtask):
+        return httpForbidden(403, 'You do not have sufficient permissions to'
+                                  ' access this page.')
+
+    if not subtask.editable:
+        return redirect('/history/%s.html' % subtask.url_token)
+
+    return subtask

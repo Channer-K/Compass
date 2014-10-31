@@ -1,6 +1,6 @@
 <form action="{% url 'go-next' %}" method="POST" role="form">
   {% csrf_token %}
-  <input type="hidden" name="step" value="{{req_step.pk}}">
+  <input type="hidden" name="sid" value="{{req_step.pk}}">
   <button class="btn btn-primary btn-sm" type="submit" name="opt" value="finish">发布完成</button>
   <a id="cancle-btn" class="btn btn-warning btn-sm">撤销本次发布</a>
 </form>

@@ -119,15 +119,16 @@ def get_right_assignee(exclude=[]):
     users = set()
     for group in groups:
         for user in group.user_set.all():
-            if user.is_leader or (exclude and user in exclude):
+            if (not user.at_work and user.is_leader
+                    or (exclude and user in exclude)):
                 continue
             users.add(user)
 
-    users = list(users)
+    users_list = list(users)
 
-    mrRight = users[0]
-    if len(users) > 1:
-        for user in users[1:]:
+    mrRight = users_list[0]
+    if len(users_list) > 1:
+        for user in users_list[1:]:
             num = user.get_count_inprogress()
             if num and num <= mrRight.get_count_inprogress():
                 mrRight = user

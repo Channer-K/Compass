@@ -110,7 +110,7 @@
             <p><b>确认人：</b><span>{{task.auditor.username}}</span></p>
             <p><b>备注</b>：
             <p>{{task.comment|default:"无"|ellipses:120}}</p>
-            <p><a href="{%url 'detail' id=task.pk step=task.in_progress.pk %}">查看详情</a></p>
+            <p><a href="{%url 'detail' tid=task.pk sid=task.in_progress.pk %}">查看详情</a></p>
           </div>
         </div>
       </div>

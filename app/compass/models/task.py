@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from compass.utils import process
 from compass.conf import settings
-from compass.models import User, Module, Environment
+from compass.models import User, Module, Environment, Role
 from django.db import models
 from django.utils import timezone
 from django.dispatch import receiver
@@ -92,6 +92,22 @@ class Task(models.Model):
 
         return modules
 
+    def get_stakeholders(self, exclude=[]):
+        stakeholders = set([self.applicant, self.auditor])
+
+        SA_Leader_Role = Role.objects.get(pk=settings.SA_LEADER_RID)
+        SA_Leader = SA_Leader_Role.user_set.all()[0]
+
+        stakeholders.add(SA_Leader)
+
+        if self.in_progress().assignee:
+            stakeholders.add(self.in_progress().assignee)
+
+        if exclude:
+            stakeholders = stakeholders - set(exclude)
+
+        return stakeholders
+
     def force_terminate(self, info=None):
         self.editable = False
         update_fields = ['editable']
@@ -108,16 +124,6 @@ class Task(models.Model):
             return
 
         return
-
-    # hard coding here
-    @property
-    def success_or_failure(self):
-        if self.in_progress().status.pk == settings.SuccessPost_Status:
-            return 1
-        elif self.in_progress().status.pk == settings.FailurePost_STATUS:
-            return -1
-
-        return 0
 
 
 @receiver(pre_save, sender=Task)
@@ -188,17 +194,13 @@ class Subtask(models.Model):
         return
 
     def generate_snapshot(self, request):
-
         try:
             self.editable = False
             self.save(update_fields=['editable'])
         except ValueError:
             pass
 
-        context = {
-            'task': self.task,
-            'req_step': self
-        }
+        context = {'task': self.task, 'req_step': self}
 
         from django.template import RequestContext
         from django.template.loader import render_to_string

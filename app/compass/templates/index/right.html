@@ -80,8 +80,8 @@
     <li>
       <div class="entry_wrap">
         <div class="entry_content">
-          <p>离线人员：{{ user.offline_in_group|join:" " }}</p>
-          <p>在线人员：{{ user.online_in_group|join:" " }}</p>
+          <p>非工作状态：{{ user.offline_in_group|join:" " }}</p>
+          <p>工作状态：{{ user.online_in_group|join:" " }}</p>
           <small style="font-style: italic;">以上仅为组内成员动态</small>
         </div>
       </div>

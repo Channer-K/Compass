@@ -15,9 +15,7 @@ def send_email(username, subject, from_email=settings.SYSTEM_EMAIL, to=None,
         text_tpl = 'email/' + template_name + '.txt'
         html_tpl = 'email/' + template_name + '.html'
 
-        c = Context({
-            'username': username
-            })
+        c = Context({'username': username})
 
         if extra_context is not None:
             c.update(extra_context)
