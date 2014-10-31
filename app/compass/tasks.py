@@ -32,24 +32,22 @@ def send_email(subject, from_email=settings.SYSTEM_EMAIL, to=None,
 
 @app.task
 def automatic_dist():
-    from django.db.models import Q
-    from compass.models import Subtask
-    w_subtasks = Subtask.objects.filter(
-        Q(editable=True),
-        Q(assignee__isnull=True),
-        Q(status_id=settings.WaitingForPost_Status)
-    )
+    from compass.models import Task, Subtask
+    from compass.utils.helper import get_right_assignee
 
-    if w_subtasks:
-        from compass.utils.helper import get_right_assignee
-        for st in w_subtasks:
-            delta = datetime.datetime.now()-st.updated_at
+    tasks = Task.objects.filter(editable=True, available=True)
 
-            if (delta.total_seconds() / 60) >= 1:
-                pub_date = datetime.datetime.now()+datetime.timedelta(hours=2)
+    for task in tasks:
+        progress_id = task.progress_id
+        subtask = Subtask.objects.get(pk=progress_id)
 
-                st.assignee = get_right_assignee()
-                st.pub_date = pub_date
-                st.status = st.get_next_status()
+        delta = datetime.datetime.now()-subtask.updated_at
 
-                st.save(update_fields=['assignee', 'pub_date', 'status'])
+        if (delta.total_seconds() / 60) >= 1:
+            pub_date = datetime.datetime.now()+datetime.timedelta(hours=2)
+
+            subtask.assignee = get_right_assignee()
+            subtask.pub_date = pub_date
+            subtask.status = subtask.get_next_status()
+
+            subtask.save(update_fields=['assignee', 'pub_date', 'status'])
