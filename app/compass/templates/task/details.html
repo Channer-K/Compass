@@ -46,7 +46,7 @@
     {% elif subtasks.count > 2 %}
       <ul class="process anchor">
         {% for subtask in subtasks %}
-        <li>
+        <li style="width: {% widthratio 100 subtasks.count 1 %}%">
           <a href="{% if not subtask.editable %}/history/{{subtask.url_token}}.html{% else %}{% url 'detail' id=task.pk step=subtask.pk %}{% endif %}"
              class="{% if subtask.status.selected %}selected{% endif %}"
              isdone="1" rel="{{forloop.counter}}">
