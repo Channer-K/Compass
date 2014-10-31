@@ -508,7 +508,7 @@ class Confirmation(TaskProcessingBase):
             self.task.next_progressing()
         elif opt == 'no':
             FailurePost(obj=self.obj).run(request)
-            
+
         return
 
     def send_email(self, request):
