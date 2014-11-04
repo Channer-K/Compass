@@ -1,7 +1,7 @@
 """
 Some custom settings for compass application.
 
-You can override any definations accordingly.
+You can override any definitions accordingly.
 """
 
 # the pk of system adiministrator group
