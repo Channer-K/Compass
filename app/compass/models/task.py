@@ -275,6 +275,12 @@ class Reply(models.Model):
         ordering = ('-created_at',)
 
 
+@receiver(post_save, sender=Reply)
+def reply_post_save(sender, instance, **kwargs):
+    instance.subtask.save(update_fields=['updated_at'])
+    return
+
+
 class Attachment(models.Model):
     reply = models.ForeignKey(Reply)
     upload = models.FileField(upload_to='%Y/%m/%d')

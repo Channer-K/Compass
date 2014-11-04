@@ -4,7 +4,6 @@ from compass.conf import settings
 from django.contrib import messages
 from django.utils import timezone
 from compass.utils.notification import send_email as send_queue
-from django.core.urlresolvers import reverse
 from compass.utils.helper import httpForbidden
 
 TPL_PATH = 'task/operate/'
@@ -47,15 +46,18 @@ class TaskProcessingBase(object):
         to = [self.task.applicant.email] if to is None else list(to)
 
         if self.obj.editable:
+            from urlparse import urlparse
             from compass.views import task_detail
-            url = request.build_absolute_uri(
-                reverse(task_detail, kwargs={'tid': self.task.pk,
-                                             'sid': self.obj.pk}
-                        ))
+            from django.core.urlresolvers import reverse
+            url = urlparse("http://" + settings.DOMAIN +
+                           reverse(task_detail, kwargs={'tid': self.task.pk,
+                                                        'sid': self.obj.pk})
+                           )
         else:
-            url = request.build_absolute_uri("/history/"+self.obj.url_token)
+            url = urlparse("http://" + settings.DOMAIN +
+                           "/history/" + self.obj.url_token)
 
-        ctx = {'url': url, 'at_time': self.task.created_at,
+        ctx = {'url': url.geturl(), 'at_time': self.task.created_at,
                'username': self.task.applicant}
 
         if extra_context is not None:
@@ -90,7 +92,7 @@ class FailureAudit(TaskProcessingBase):
     def send_email(self, request):
         subject = u'【驳回】' + self.task.amendment
         template_name = 'reject'
-        extra_context = {'username': request.user.username,
+        extra_context = {'username': request.user,
                          'task_title': self.task.amendment,
                          'info': self.task.info, 'version': self.task.version}
 
@@ -409,7 +411,7 @@ class Planning(TaskProcessingBase):
 
         to = [self.task.applicant.email, self.obj.assignee.email]
 
-        extra_context = {'username': self.obj.assignee.username,
+        extra_context = {'username': self.obj.assignee,
                          'at_time': self.obj.pub_date,
                          'task_title': self.task.amendment,
                          'version': self.task.version}
@@ -468,7 +470,7 @@ class Posting(TaskProcessingBase):
               self.task.applicant.email,
               self.obj.assignee.email]
 
-        extra_context = {'username': self.obj.assignee.username,
+        extra_context = {'username': self.obj.assignee,
                          'at_time': self.obj.pub_date,
                          'task_title': self.task.amendment,
                          'version': self.task.version}

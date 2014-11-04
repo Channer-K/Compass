@@ -221,6 +221,7 @@ def post_reply(request, tid, sid):
             for afile in files:
                 Attachment.objects.create(reply=reply, upload=afile)
 
+            from django.core.urlresolvers import reverse
             url = request.build_absolute_uri(
                 reverse(task_detail, kwargs={'tid': tid, 'sid': sid})
                 )

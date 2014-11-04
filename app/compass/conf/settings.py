@@ -4,6 +4,9 @@ Some custom settings for compass application.
 You can override any definitions accordingly.
 """
 
+#
+DOMAIN = "172.26.184.26:8888"
+
 # the pk of system adiministrator group
 SA_GID = 2
 
@@ -30,4 +33,12 @@ MAX_UPLOAD_SIZE = 1024*1024*20
 
 SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
 
-SCHEDULE_PERIOD = 60*30
+SCHEDULE_PERIOD = 60*1
+
+#
+Distribute_After = SCHEDULE_PERIOD*20
+#
+Ntf_Before_While_Planning = SCHEDULE_PERIOD*60*24*2
+
+#
+Ntf_Before_While_PandC = SCHEDULE_PERIOD*6
