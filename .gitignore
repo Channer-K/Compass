@@ -16,3 +16,4 @@ app/compass/fixtures/
 venv/
 
 *.pyc
+README

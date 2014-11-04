@@ -6,7 +6,7 @@ from compass.models import *
 from compass.utils import permissions
 from compass.utils.helper import httpForbidden
 from compass.utils.decorators import ajax_required
-from compass.tasks import send_email
+from compass.utils.notification import send_email
 from django.http import HttpResponse
 from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
@@ -157,7 +157,7 @@ def new_task(request):
                 package.task = task
                 package.save()
 
-            """ Notify superior if task created successfully """
+            """ Send notification if task created successfully """
             scls = task.in_progress().get_ctrl_cls()
             if scls:
                 to = None if task.available else [task.auditor.email]
@@ -179,7 +179,7 @@ def new_task(request):
 def task_detail(request, tid, sid):
     task = get_object_or_404(Task, pk=tid)
 
-    subtask = _check_permission(sid, request.user)
+    subtask = permissions._check_permission(sid, request.user)
 
     context = {'task': task, 'req_step': subtask, 'form': ReplyForm()}
 
@@ -197,7 +197,7 @@ def task_go_next(request):
     if 'sid' not in request.POST:
         return httpForbidden(400, 'Bad request.')
 
-    subtask = _check_permission(request.POST['sid'], request.user)
+    subtask = permissions._check_permission(request.POST['sid'], request.user)
 
     subtask.go_run(request)
 
@@ -206,7 +206,7 @@ def task_go_next(request):
 
 @login_required
 def post_reply(request, tid, sid):
-    subtask = _check_permission(sid, request.user)
+    subtask = permissions._check_permission(sid, request.user)
     task = subtask.task
 
     if request.method == 'POST':
@@ -230,10 +230,10 @@ def post_reply(request, tid, sid):
                              'at_time': task.created_at,
                              'message': request.POST.get('content')}
 
-            stakeholders = task.get_stakeholders(exclude=[request.user])
+            user_list = task.get_stakeholders(exclude=[request.user])
 
             send_email.delay(subject=u'【新回复】' + task.amendment,
-                             to=[u.email for u in stakeholders],
+                             to=[user.email for user in user_list],
                              extra_context=extra_context)
 
             return redirect(task_detail, tid=tid, sid=sid)
@@ -312,16 +312,3 @@ def filter(request):
     print tasks
 
     return HttpResponse("ok")
-
-
-def _check_permission(subtask_id, user):
-    subtask = get_object_or_404(Subtask, pk=subtask_id)
-
-    if not permissions.can_read_task(user, subtask):
-        return httpForbidden(403, 'You do not have sufficient permissions to'
-                                  ' access this page.')
-
-    if not subtask.editable:
-        return redirect('/history/%s.html' % subtask.url_token)
-
-    return subtask

@@ -3,7 +3,7 @@ import datetime
 from compass.conf import settings
 from django.contrib import messages
 from django.utils import timezone
-from compass.tasks import send_email as mailNotify
+from compass.utils.notification import send_email as send_queue
 from django.core.urlresolvers import reverse
 from compass.utils.helper import httpForbidden
 
@@ -11,7 +11,7 @@ TPL_PATH = 'task/operate/'
 
 
 class TaskProcessingBase(object):
-    """ Base class of task processing """
+    """ Base class """
     def __init__(self, obj=None):
         super(TaskProcessingBase, self).__init__()
         self.obj = obj
@@ -29,7 +29,7 @@ class TaskProcessingBase(object):
         return
 
     def can_execute(self, subtask, user):
-        """ Subclass should override this function. """
+        """ This must be overrided. """
         if user.is_superuser:
             return True
         return False
@@ -61,7 +61,7 @@ class TaskProcessingBase(object):
         if extra_context is not None:
             ctx.update(extra_context)
 
-        mailNotify.delay(subject=subject, to=to, template_name=template_name,
+        send_queue.delay(subject=subject, to=to, template_name=template_name,
                          extra_context=ctx)
 
     @property
