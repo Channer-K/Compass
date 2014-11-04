@@ -60,7 +60,20 @@ class Module(models.Model):
         app_label = 'compass'
 
 
-# Inject some fields to auth.Group
+def get_leader_role(self):
+    for role in self.role_set.all():
+        if role.is_leader:
+            return role
+
+    for ancestor in self.get_ancestors(include_self=False).all():
+        for role in self.role_set.all():
+            if ancestor.is_leader:
+                return ancestor
+
+    return None
+
+# Inject to auth.Group
+from types import MethodType
 models.ForeignKey(
     Group,
     null=True, blank=True,
@@ -68,6 +81,8 @@ models.ForeignKey(
     verbose_name=_('parent'),
     help_text=_('The group\'s parent group. None, if it is a root node.')
     ).contribute_to_class(Group, 'parent')
+
+Group.get_leader_role = MethodType(get_leader_role, None, Group)
 
 import mptt
 mptt.register(Group)
@@ -79,7 +94,9 @@ class Role(models.Model):
                                  verbose_name=u'汇报对象',
                                  related_name='subordinate_set',
                                  related_query_name='subordinate')
-    group = models.ForeignKey(Group)
+    group = models.ForeignKey(Group,
+                              related_name='role_set',
+                              related_query_name='role')
     is_leader = models.BooleanField(
         _('leader'), default=False,
         help_text=_('Designates that this role is leader or just staff.'))
@@ -182,14 +199,8 @@ class MyUserManager(BaseUserManager):
                                  **extra_fields)
 
     def create_superuser(self, username, email, password, **extra_fields):
-        #admin_group = Group.objects.get_or_create(name='administrator')[0]
-        #admin_role = Role.objects.get_or_create(name='administrator',
-        #                                        group=admin_group)[0]
         return self._create_user(username, email, password, True, True,
                                  **extra_fields)
-        #admin.roles.add(admin_role)
-        #admin.groups.add(admin_group)
-        #return admin
 
 
 class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
@@ -242,7 +253,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
     def get_all_groups(self):
         """
-        Bottom-up getting all the groups of the user.
+        Bottom-up getting all the groups that user belongs to.
         """
         direct_groups = self.groups.all()
         groups = set()
@@ -254,9 +265,6 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
             groups.add(group)
 
         return groups
-
-    def get_all_roles(self):
-        return set(self.roles.all())
 
     def get_subordinate_users(self, include_self=True):
         """
@@ -353,7 +361,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         for g in group.get_ancestors(include_self=True).all():
             roles.update(g.role_set.all())
 
-        role = list(self.get_all_roles() & roles)
+        role = list(set(self.roles.all()) & roles)
         if len(role) > 1:
             raise ValueError
 
@@ -362,8 +370,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     @property
     def is_leader(self):
         for role in self.roles.all():
-            """ hard coding here """
-            if (settings.LEADER_STR.lower() in role.name.lower()):
+            if role.is_leader:
                 return True
 
         return False
@@ -371,7 +378,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     @property
     def is_in_SA(self):
         """ hard coding here """
-        SA_GROUP = Group.objects.get(pk=settings.SA_GROUP_ID)
+        SA_GROUP = Group.objects.get(pk=settings.SA_GID)
 
         if SA_GROUP in self.get_all_groups():
             return True

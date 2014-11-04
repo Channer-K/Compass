@@ -325,7 +325,7 @@ class NewTaskForm(forms.ModelForm):
             env = Environment.objects.get(pk=eid)
             task.subtask_set.create(environment=env)
 
-        auditors = list(self._generater_auditors(task))
+        auditors = list(self._get_auditors(task))
         if auditors:
             task.auditor = auditors[0]
             task.save(update_fields=['auditor'])
@@ -338,14 +338,12 @@ class NewTaskForm(forms.ModelForm):
 
         return task
 
-    def _generater_auditors(self, task):
-        """ Not so good """
+    def _get_auditors(self, task):
         auditors = set()
         for module in task.modules.all():
-            role = self.user_cache.role_in_group(module.group)
-            superior = role.superior
-            if superior:
-                auditors.update(superior.user_set.all())
+            leader_role = module.group.get_leader_role()
+            if leader_role:
+                auditors.update(leader_role.user_set.all())
 
         return auditors
 

@@ -62,7 +62,7 @@
         <div class="form-group">
           <label class="col-sm-2 control-label">Roles</label>
           <div class="col-sm-6 text-dormant">
-            <span>{{ user.get_all_roles|join:" | " }}</span>
+            <span>{{ user.roles.all|join:" | " }}</span>
           </div>
         </div>
         <div class="form-group">

@@ -5,11 +5,7 @@ You can override any definations accordingly.
 """
 
 # the pk of system adiministrator group
-SA_GROUP_ID = 2
-SA_LEADER_RID = 2
-
-# the keyword contained the name of leader role
-LEADER_STR = "leader"
+SA_GID = 2
 
 # the pk for some specific status
 FailureAudit_STATUS = 1
@@ -30,8 +26,8 @@ CONTENT_TYPES = [
 ]
 
 # Specify a max value for the size of uploaded file
-MAX_UPLOAD_SIZE = 1024*1024*10
+MAX_UPLOAD_SIZE = 1024*1024*20
 
-SYSTEM_EMAIL = 'no-reply@compass'
+SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
 
 SCHEDULE_PERIOD = 60*30

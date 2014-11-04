@@ -153,7 +153,7 @@ class WaitingForAudit(TaskProcessingBase):
     def approval(self, request):
         user = request.user
 
-        for role in user.get_all_roles():
+        for role in user.roles.all():
             if role.superior:
                 user_set = role.superior.user_set.all()
                 self.task.auditor = user_set[0]
@@ -219,9 +219,9 @@ class SuccessPost(TaskProcessingBase):
         subject = u'【成功】' + self.task.amendment
         template_name = 'success'
 
-        from compass.models import Role
-        SA_Leader_Role = Role.objects.get(pk=settings.SA_LEADER_RID)
-        SA_Leader = SA_Leader_Role.user_set.all()[0]
+        from compass.models import Group
+        SA_Group = Group.objects.get(pk=settings.SA_GID)
+        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
 
         to = [self.obj.assignee.email, SA_Leader.email,
               self.task.auditor.email]
@@ -333,9 +333,9 @@ class WaitingForPost(TaskProcessingBase):
         subject = u'【等待中】' + self.task.amendment
         template_name = 'new_task'
 
-        from compass.models import Role
-        SA_Leader_Role = Role.objects.get(pk=settings.SA_LEADER_RID)
-        SA_Leader = SA_Leader_Role.user_set.all()[0]
+        from compass.models import Group
+        SA_Group = Group.objects.get(pk=settings.SA_GID)
+        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
 
         to = [SA_Leader.email] if to is None else to
 
@@ -460,9 +460,9 @@ class Posting(TaskProcessingBase):
         template_name = 'posting'
         subject = u'【发布中】' + self.task.amendment
 
-        from compass.models import Role
-        SA_Leader_Role = Role.objects.get(pk=settings.SA_LEADER_RID)
-        SA_Leader = SA_Leader_Role.user_set.all()[0]
+        from compass.models import Group
+        SA_Group = Group.objects.get(pk=settings.SA_GID)
+        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
 
         to = [SA_Leader.email,
               self.task.applicant.email,

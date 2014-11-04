@@ -113,7 +113,7 @@ def save_snapshot(token, content):
 def get_right_assignee(exclude=[]):
     from compass.models import Group
 
-    SA_GROUP = Group.objects.get(pk=settings.SA_GROUP_ID)
+    SA_GROUP = Group.objects.get(pk=settings.SA_GID)
     groups = SA_GROUP.get_descendants(include_self=True)
 
     users = set()
@@ -141,7 +141,7 @@ def get_all_online_SAs():
     online_SAs = set()
 
     """hard coding here"""
-    SA = Group.objects.get(pk=settings.SA_GROUP_ID)
+    SA = Group.objects.get(pk=settings.SA_GID)
     for group in SA.get_descendants(include_self=True):
         online_SAs.update(group.user_set.all().filter(at_work=True))
 
