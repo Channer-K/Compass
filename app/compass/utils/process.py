@@ -45,10 +45,10 @@ class TaskProcessingBase(object):
 
         to = [self.task.applicant.email] if to is None else list(to)
 
+        from urlparse import urlparse
+        from compass.views import task_detail
+        from django.core.urlresolvers import reverse
         if self.obj.editable:
-            from urlparse import urlparse
-            from compass.views import task_detail
-            from django.core.urlresolvers import reverse
             url = urlparse("http://" + settings.DOMAIN +
                            reverse(task_detail, kwargs={'tid': self.task.pk,
                                                         'sid': self.obj.pk})
@@ -79,6 +79,10 @@ class FailureAudit(TaskProcessingBase):
         return StatusControl.objects.get(pk=settings.FailureAudit_STATUS)
 
     def run(self, request):
+        from compass.models import StatusControl
+        failAudit = StatusControl.objects.get(pk=settings.FailureAudit_STATUS)
+        self.task.subtask_set.update(status=failAudit)
+
         self.task.force_terminate(request.POST['info'])
 
         for subtask in self.task.subtask_set.all():
@@ -127,7 +131,7 @@ class FailurePost(TaskProcessingBase):
 
     def send_email(self, request):
         subject = u'【失败】' + self.task.amendment
-        to = [self.task.applicant.email, self.task.auditor.email]
+        to = list([user.email for user in self.task.get_stakeholders()])
 
         if self.obj.assignee is not None:
             to.append(self.obj.assignee.email)

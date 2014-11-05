@@ -8,13 +8,13 @@ def _check_permission(subtask_id, user):
     subtask = get_object_or_404(Subtask, pk=subtask_id)
 
     if not can_read_task(user, subtask):
-        return httpForbidden(403, 'You do not have sufficient permissions to'
-                                  ' access this page.')
+        return False, httpForbidden(403, 'You do not have sufficient '
+                                         'permissions to access this page.')
 
     if not subtask.editable:
-        return redirect('/history/%s.html' % subtask.url_token)
+        return False, redirect('/history/%s.html' % subtask.url_token)
 
-    return subtask
+    return True, subtask
 
 
 def can_read_task(user, subtask):

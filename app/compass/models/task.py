@@ -117,11 +117,6 @@ class Task(models.Model):
             update_fields.append('info')
 
         self.save(update_fields=update_fields)
-        try:
-            fa = StatusControl.objects.get(pk=settings.FailureAudit_STATUS)
-            self.subtask_set.update(editable=False, status=fa)
-        except ValueError:
-            return
 
         return
 

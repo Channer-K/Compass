@@ -179,7 +179,12 @@ def new_task(request):
 def task_detail(request, tid, sid):
     task = get_object_or_404(Task, pk=tid)
 
-    subtask = permissions._check_permission(sid, request.user)
+    flag, result = permissions._check_permission(sid, request.user)
+
+    if flag:
+        subtask = result
+    else:
+        return result
 
     context = {'task': task, 'req_step': subtask, 'form': ReplyForm()}
 
@@ -197,7 +202,13 @@ def task_go_next(request):
     if 'sid' not in request.POST:
         return httpForbidden(400, 'Bad request.')
 
-    subtask = permissions._check_permission(request.POST['sid'], request.user)
+    flag, result = permissions._check_permission(request.POST['sid'],
+                                                 request.user)
+
+    if flag:
+        subtask = result
+    else:
+        return result
 
     subtask.go_run(request)
 
@@ -206,7 +217,13 @@ def task_go_next(request):
 
 @login_required
 def post_reply(request, tid, sid):
-    subtask = permissions._check_permission(sid, request.user)
+    flag, result = permissions._check_permission(sid, request.user)
+
+    if flag:
+        subtask = result
+    else:
+        return result
+
     task = subtask.task
 
     if request.method == 'POST':
