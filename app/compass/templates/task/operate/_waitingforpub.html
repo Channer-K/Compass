@@ -18,17 +18,14 @@
         <td style="display: none;"><input type="hidden" name="subtask" value="{{sub.pk}}"></td>
         <td>{{sub.environment.name}}</td>
         <td>
-          {% if perms.compass.distribute_task %}
-            <select data-toggle='herolist' name="pub_user" class="select-block">
-              {% for sa in pub_users %}
-                <option value="{{sa.pk}}">{{sa.username}}</option>
-              {% empty %}
-                <option value="0">无可分配人员... ...</option>
-              {% endfor %}
-            </select>
-          {% else %}
-            {{user}}
-          {% endif %}
+          <select data-toggle='herolist' name="pub_user" class="select-block">
+            {% for sa in pub_users %}
+              <option value="{{sa.pk}}">{{sa.username}}</option>
+            {% empty %}
+              <option value="0">无可分配人员... ...</option>
+            {% endfor %}
+              <option value="0">暂不分配</option>
+          </select>
         </td>
         <td>
           <div class="form-group">

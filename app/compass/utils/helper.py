@@ -140,7 +140,6 @@ def get_all_online_SAs():
     from compass.models import Group
     online_SAs = set()
 
-    """hard coding here"""
     SA = Group.objects.get(pk=settings.SA_GID)
     for group in SA.get_descendants(include_self=True):
         online_SAs.update(group.user_set.all().filter(at_work=True))

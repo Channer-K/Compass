@@ -23,14 +23,13 @@ def distribute_tasks():
         delta = datetime.datetime.now() - subtask.updated_at
 
         if (subtask.status.pk == 4 and
+            subtask.assignee is None and
                 delta.total_seconds() >= settings.Distribute_After):
-            pub_date = datetime.datetime.now() + datetime.timedelta(hours=2)
 
             subtask.assignee = get_right_assignee()
-            subtask.pub_date = pub_date
             subtask.status = subtask.get_next_status()
 
-            subtask.save(update_fields=['assignee', 'pub_date', 'status'])
+            subtask.save(update_fields=['assignee', 'status'])
 
             subject = u'【新任务】' + "(" + subtask.status.name + ")" + \
                 subtask.task.amendment

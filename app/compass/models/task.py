@@ -73,7 +73,7 @@ class Task(models.Model):
         subtasks = list(self.subtask_set.all())
         curr_idx = subtasks.index(self.in_progress())
         try:
-            _next = subtasks[curr_idx+1]
+            _next = subtasks[curr_idx + 1]
             self.progressing_id = _next.pk
             self.save(update_fields=['progressing_id'])
             return _next

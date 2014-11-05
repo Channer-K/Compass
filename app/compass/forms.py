@@ -342,7 +342,7 @@ class NewTaskForm(forms.ModelForm):
         auditors = set()
         for module in task.modules.all():
             leader_role = module.group.get_leader_role()
-            if leader_role:
+            if leader_role and leader_role not in self.user_cache.roles.all():
                 auditors.update(leader_role.user_set.all())
 
         return auditors

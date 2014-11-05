@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-import datetime
+from datetime import datetime
 from compass.conf import settings
 from django.contrib import messages
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
 from compass.utils.notification import send_email as send_queue
 from compass.utils.helper import httpForbidden
 
@@ -48,14 +49,17 @@ class TaskProcessingBase(object):
         from urlparse import urlparse
         from compass.views import task_detail
         from django.core.urlresolvers import reverse
-        if self.obj.editable:
+        # re-read from database
+        from compass.models import Subtask
+        subtask = Subtask.objects.get(pk=self.obj.pk)
+        if subtask.editable:
             url = urlparse("http://" + settings.DOMAIN +
                            reverse(task_detail, kwargs={'tid': self.task.pk,
                                                         'sid': self.obj.pk})
                            )
         else:
             url = urlparse("http://" + settings.DOMAIN +
-                           "/history/" + self.obj.url_token)
+                           "/history/" + self.obj.url_token + ".html")
 
         ctx = {'url': url.geturl(), 'at_time': self.task.created_at,
                'username': self.task.applicant}
@@ -225,12 +229,7 @@ class SuccessPost(TaskProcessingBase):
         subject = u'【成功】' + self.task.amendment
         template_name = 'success'
 
-        from compass.models import Group
-        SA_Group = Group.objects.get(pk=settings.SA_GID)
-        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
-
-        to = [self.obj.assignee.email, SA_Leader.email,
-              self.task.auditor.email]
+        to = list([user.email for user in self.task.get_stakeholders()])
 
         extra_context = {'task_title': self.task.amendment,
                          'version': self.task.version}
@@ -255,33 +254,38 @@ class WaitingForPost(TaskProcessingBase):
         if opt is None:
             return httpForbidden(400, 'Bad request.')
 
-        from django.shortcuts import get_object_or_404
         from compass.models import User, Subtask, StatusControl
         if opt == 'dist':
             subtask_list = request.POST.getlist('subtask')
             pub_user = request.POST.getlist('pub_user')
             date_list = request.POST.getlist('pub_date')
 
-            for idx, date in enumerate(date_list):
-                if date == u'':
+            for idx, user in enumerate(pub_user):
+                if user == '0':
                     continue
 
-                pub_date = datetime.datetime.strptime(date, '%m/%d/%Y %H')
                 subtask = get_object_or_404(Subtask, pk=subtask_list[idx])
                 assignee = get_object_or_404(User, pk=pub_user[idx])
 
-                subtask.assignee, subtask.pub_date = assignee, pub_date
+                subtask.assignee = assignee
 
-                today = timezone.now()
-                delta = pub_date - today
-                if (delta.total_seconds() / 3600) >= 6:
-                    """ hard coding here """
-                    planning_status = StatusControl.objects.get(pk=8)
-                    subtask.status = planning_status
-                else:
-                    subtask.status = subtask.get_next_status()
+                update_fields = ['assignee']
+                if date_list[idx] != '':
+                    pub_date = datetime.strptime(date_list[idx], '%m/%d/%Y %H')
 
-                subtask.save(update_fields=['assignee', 'pub_date', 'status'])
+                    subtask.pub_date = pub_date
+
+                    delta = pub_date - timezone.now()
+                    if (delta.total_seconds() / 3600) >= 6:
+                        """ hard coding here """
+                        planning_status = StatusControl.objects.get(pk=8)
+                        subtask.status = planning_status
+                    else:
+                        subtask.status = subtask.get_next_status()
+
+                    update_fields.extend(['pub_date', 'status'])
+
+                subtask.save(update_fields=update_fields)
 
                 scls = subtask.get_ctrl_cls()
 
@@ -289,26 +293,32 @@ class WaitingForPost(TaskProcessingBase):
                     scls.send_email(request)
         elif opt == 'accept':
             sid = request.POST.get('subtask')
-            pub_date = request.POST.get('pub_date')
+            date_str = request.POST.get('pub_date')
 
-            if pub_date == u'':
-                return
-
-            pub_date = datetime.datetime.strptime(pub_date, '%m/%d/%Y %H')
             subtask = get_object_or_404(Subtask, pk=sid)
 
-            subtask.pub_date = pub_date
+            if date_str != '':
+                pub_date = datetime.strptime(date_str, '%m/%d/%Y %H')
 
-            today = timezone.now()
-            delta = pub_date - today
-            if (delta.total_seconds() / 3600) >= 6:
-                """ hard coding here """
-                planning_status = StatusControl.objects.get(pk=8)
-                subtask.status = planning_status
+                subtask.pub_date = pub_date
+
+                delta = pub_date - timezone.now()
+                if (delta.total_seconds() / 3600) >= 6:
+                    """ hard coding here """
+                    planning_status = StatusControl.objects.get(pk=8)
+                    subtask.status = planning_status
+                else:
+                    subtask.status = subtask.get_next_status()
+
+                update_fields = ['pub_date', 'status']
             else:
-                subtask.status = subtask.get_next_status()
+                """ hard coding here """
+                accepted_status = StatusControl.objects.get(pk=9)
+                subtask.status = accepted_status
 
-            subtask.save(update_fields=['pub_date', 'status'])
+                update_fields = ['status']
+
+            subtask.save(update_fields=update_fields)
 
             # re-read the subtask status from database
             scls = subtask.get_ctrl_cls()
@@ -339,11 +349,7 @@ class WaitingForPost(TaskProcessingBase):
         subject = u'【等待中】' + self.task.amendment
         template_name = 'new_task'
 
-        from compass.models import Group
-        SA_Group = Group.objects.get(pk=settings.SA_GID)
-        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
-
-        to = [SA_Leader.email] if to is None else to
+        to = list([user.email for user in self.task.get_stakeholders(exclude=[self.task.applicant, self.task.auditor])])
 
         extra_context = {'task_title': self.task.amendment,
                          'version': self.task.version}
@@ -372,7 +378,7 @@ class Planning(TaskProcessingBase):
         new_pdate = request.POST.get('pub_date')
 
         if new_pdate:
-            new_pdate = datetime.datetime.strptime(new_pdate, '%m/%d/%Y %H')
+            new_pdate = datetime.strptime(new_pdate, '%m/%d/%Y %H')
 
             if new_pdate <= timezone.now():
                 return
@@ -466,13 +472,7 @@ class Posting(TaskProcessingBase):
         template_name = 'posting'
         subject = u'【发布中】' + self.task.amendment
 
-        from compass.models import Group
-        SA_Group = Group.objects.get(pk=settings.SA_GID)
-        SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
-
-        to = [SA_Leader.email,
-              self.task.applicant.email,
-              self.obj.assignee.email]
+        to = list([user.email for user in self.task.get_stakeholders()])
 
         extra_context = {'username': self.obj.assignee,
                          'at_time': self.obj.pub_date,
@@ -525,4 +525,68 @@ class Confirmation(TaskProcessingBase):
     @property
     def template(self):
         template_name = TPL_PATH + '_waitingforconfirm.html'
+        return template_name
+
+
+class Accepted(TaskProcessingBase):
+    def can_execute(self, subtask, user):
+        if (user.has_perm('compass.distribute_task') or
+                user == self.obj.assignee):
+            return True
+
+        return False
+
+    def run(self, request):
+        opt = request.POST.get('opt')
+
+        if opt is None:
+            return httpForbidden(400, 'Bad request.')
+
+        if opt == 'start':
+            sid = request.POST.get('subtask')
+            date_str = request.POST.get('pub_date')
+
+            from compass.models import Subtask, StatusControl
+            subtask = get_object_or_404(Subtask, pk=sid)
+
+            if date_str == '':
+                return
+
+            pub_date = datetime.strptime(date_str, '%m/%d/%Y %H')
+
+            subtask.pub_date = pub_date
+
+            delta = pub_date - timezone.now()
+            if (delta.total_seconds() / 3600) >= 6:
+                """ hard coding here """
+                planning_status = StatusControl.objects.get(pk=8)
+                subtask.status = planning_status
+            else:
+                subtask.status = subtask.get_next_status()
+
+            subtask.save(update_fields=['pub_date', 'status'])
+
+            # re-read the subtask status from database
+            scls = subtask.get_ctrl_cls()
+
+            if scls:
+                scls.send_email(request)
+
+    def send_email(self, request, to=None):
+        subject = u'【已接受】' + self.task.amendment
+        template_name = 'accepted'
+
+        to = list([user.email for user in self.task.get_stakeholders(exclude=[request.user])])
+
+        extra_context = {'username': self.obj.assignee,
+                         'task_title': self.task.amendment,
+                         'version': self.task.version}
+
+        super(Accepted, self).send_mail(request, subject=subject, to=to,
+                                        template_name=template_name,
+                                        extra_context=extra_context)
+
+    @property
+    def template(self):
+        template_name = TPL_PATH + '_accepted.html'
         return template_name
