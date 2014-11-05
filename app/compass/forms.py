@@ -339,11 +339,19 @@ class NewTaskForm(forms.ModelForm):
         return task
 
     def _get_auditors(self, task):
+        superiors = set()
         auditors = set()
+
         for module in task.modules.all():
-            leader_role = module.group.get_leader_role()
-            if leader_role and leader_role not in self.user_cache.roles.all():
-                auditors.update(leader_role.user_set.all())
+            superior = self.user_cache.role_in_group(module.group).superior
+            if superior:
+                superiors.update(superior)
+
+        highest_level = min([s.level for s in superiors])
+
+        for role in superiors:
+            if role.level == highest_level:
+                auditors.update(role.user_set.all())
 
         return auditors
 
