@@ -292,33 +292,14 @@ class WaitingForPost(TaskProcessingBase):
                 if scls:
                     scls.send_email(request)
         elif opt == 'accept':
-            sid = request.POST.get('subtask')
-            date_str = request.POST.get('pub_date')
+            sid = request.POST.get('sid')
 
             subtask = get_object_or_404(Subtask, pk=sid)
 
-            if date_str != '':
-                pub_date = datetime.strptime(date_str, '%m/%d/%Y %H')
+            accepted_status = StatusControl.objects.get(pk=9)
+            subtask.status = accepted_status
 
-                subtask.pub_date = pub_date
-
-                delta = pub_date - timezone.now()
-                if (delta.total_seconds() / 3600) >= 6:
-                    """ hard coding here """
-                    planning_status = StatusControl.objects.get(pk=8)
-                    subtask.status = planning_status
-                else:
-                    subtask.status = subtask.get_next_status()
-
-                update_fields = ['pub_date', 'status']
-            else:
-                """ hard coding here """
-                accepted_status = StatusControl.objects.get(pk=9)
-                subtask.status = accepted_status
-
-                update_fields = ['status']
-
-            subtask.save(update_fields=update_fields)
+            subtask.save(update_fields=['status'])
 
             # re-read the subtask status from database
             scls = subtask.get_ctrl_cls()
@@ -326,7 +307,7 @@ class WaitingForPost(TaskProcessingBase):
             if scls:
                 scls.send_email(request)
         elif opt == 'decline':
-            sid = request.POST.get('subtask')
+            sid = request.POST.get('sid')
             subtask = get_object_or_404(Subtask, pk=sid)
 
             from compass.utils.helper import get_right_assignee
@@ -585,6 +566,13 @@ class Accepted(TaskProcessingBase):
         super(Accepted, self).send_mail(request, subject=subject, to=to,
                                         template_name=template_name,
                                         extra_context=extra_context)
+
+    def extra_context(self, request):
+        pub_tasks = self.task.subtask_set.filter(pub_date__isnull=True)
+        from compass.utils.helper import get_all_online_SAs
+        pub_users = get_all_online_SAs()
+
+        return {'pub_tasks': pub_tasks, 'pub_users': pub_users}
 
     @property
     def template(self):

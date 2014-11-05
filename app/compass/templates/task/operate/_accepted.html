@@ -1,6 +1,7 @@
 <form id="form-{{req_step.pk}}" action="{% url 'go-next' %}" method="POST" role="form">
   {% csrf_token %}
   <input type="hidden" name="sid" value="{{req_step.pk}}">
+  {% if perms.compass.distribute_task %}
   <p><b>任务分配</b></p>
   <table class="table table-hover" style="table-layout: fixed;">
     <thead>
@@ -12,23 +13,35 @@
       </tr>
     </thead>
     <tbody>
-    {% if req_step.assignee == user %}
+    {% for sub in pub_tasks %}
       <tr>
-        <td style="display: none;"><input type="hidden" name="subtask" value="{{req_step.pk}}"></td>
-        <td>{{req_step.environment.name}}</td>
-        <td>{{user}}</td>
+        <td style="display: none;"><input type="hidden" name="subtask" value="{{sub.pk}}"></td>
+        <td>{{sub.environment.name}}</td>
+        <td>
+          <select data-toggle='herolist' name="pub_user" class="select-block">
+            {% for sa in pub_users %}
+              <option value="{{sa.pk}}">{{sa.username}}</option>
+            {% empty %}
+              <option value="0">无可分配人员... ...</option>
+            {% endfor %}
+              <option value="0">暂不分配</option>
+          </select>
+        </td>
         <td>
           <div class="form-group">
-            <input type="text" class="form-control" name="pub_date" id="id_pub_date_{{req_step.pk}}" readonly>
+            <input type="text" class="form-control" name="pub_date" id="id_pub_date_{{sub.pk}}" readonly>
             <span class="input-icon fui-calendar-solid"></span>
           </div>
         </td>
       </tr>
+    {% endfor %}
     {% endif %}
     </tbody>
   </table>
-  {% if req_step.assignee == user %}
-    <button type="submit" class="btn btn-primary btn-sm" name="opt" value="start">设置发布时间</button>
+  {% if perms.compass.distribute_task %}
+    <button type="submit" class="btn btn-primary btn-sm" name="opt" value="dist">分配任务</button>
+  {% elif req_step.assignee == user %}
+    <p>等待运维组长分配发布时间。</p>
   {% endif %}
 </form>
 
