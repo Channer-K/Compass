@@ -27,9 +27,8 @@ def distribute_tasks():
                 delta.total_seconds() >= settings.Distribute_After):
 
             subtask.assignee = get_right_assignee()
-            subtask.status = subtask.get_next_status()
 
-            subtask.save(update_fields=['assignee', 'status'])
+            subtask.save(update_fields=['assignee'])
 
             subject = u'【新任务】' + "(" + subtask.status.name + ")" + \
                 subtask.task.amendment

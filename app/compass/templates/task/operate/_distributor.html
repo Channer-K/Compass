@@ -14,7 +14,7 @@
         <td>
           <select name='herolist' multiple="multiple" class="select-block">
             {% for user in users %}
-              <option value="{{user.pk}}">{{user.username}}</option>
+              <option value="{{user.pk}}">{{user}}</option>
             {% empty %}
               <option value="0">无可分配人员... ...</option>
             {% endfor %}

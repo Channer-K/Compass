@@ -288,12 +288,11 @@ class WaitingForPost(TaskProcessingBase):
                     else:
                         update_fields.append('pub_date')
 
+                    scls = subtask.get_ctrl_cls()
+                    if scls:
+                        scls.send_email(request)
+
                 subtask.save(update_fields=update_fields)
-
-                scls = subtask.get_ctrl_cls()
-
-                if scls:
-                    scls.send_email(request)
         elif opt == 'accept':
             sid = request.POST.get('sid')
 
@@ -323,7 +322,7 @@ class WaitingForPost(TaskProcessingBase):
         return
 
     def extra_context(self, request):
-        pub_tasks = self.task.subtask_set.filter(status_id=4)
+        pub_tasks = self.task.subtask_set.filter(status_id__in=[4, 9])
         from compass.utils.helper import get_all_online_SAs
         pub_users = get_all_online_SAs()
 
@@ -560,12 +559,11 @@ class Accepted(TaskProcessingBase):
                     else:
                         update_fields.append('pub_date')
 
+                    scls = subtask.get_ctrl_cls()
+                    if scls:
+                        scls.send_email(request)
+
                 subtask.save(update_fields=update_fields)
-
-                scls = subtask.get_ctrl_cls()
-
-                if scls:
-                    scls.send_email(request)
 
     def send_email(self, request, to=None):
         subject = u'【已接受】' + self.task.amendment
@@ -582,7 +580,7 @@ class Accepted(TaskProcessingBase):
                                         extra_context=extra_context)
 
     def extra_context(self, request):
-        pub_tasks = self.task.subtask_set.filter(status_id=4)
+        pub_tasks = self.task.subtask_set.filter(status_id__in=[4, 9])
         from compass.utils.helper import get_all_online_SAs
         pub_users = get_all_online_SAs()
 

@@ -20,7 +20,7 @@
         <td>
           <select data-toggle='herolist' name="pub_user" class="select-block">
             {% for sa in pub_users %}
-              <option value="{{sa.pk}}" {% if sub.assignee == sa %}selected="selected"{% endif %}>{{sa.username}}</option>
+              <option value="{{sa.pk}}" {% if sub.assignee == sa %}selected="selected"{% endif %}>{{sa}}</option>
             {% empty %}
               <option value="0">无可分配人员... ...</option>
             {% endfor %}
