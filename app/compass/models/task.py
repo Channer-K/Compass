@@ -14,6 +14,8 @@ class Task(models.Model):
                                   related_name="applicant_set",
                                   related_query_name="task_applicant")
     version = models.CharField(u'更新版本', max_length=32)
+    ticket_num = models.CharField(u'AnyPlace票号', max_length=32,
+                                  blank=True, null=True)
     modules = models.ManyToManyField(
         Module, verbose_name=u'更新模块',
         help_text=_('The modules will be updated in this task.'))

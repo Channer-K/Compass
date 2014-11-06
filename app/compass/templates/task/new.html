@@ -31,6 +31,13 @@
             <span>{{ form.version.errors }}</span>
           </div>
         </div>
+        <div class="form-group {% if form.ticket_num.errors %}has-error{% endif %}">
+          <label for="{{ form.ticket_num.id_for_label }}" class="col-sm-2 control-label">{{ form.ticket_num.label }}</label>
+          <div class="col-sm-6">
+            {{form.ticket_num}}
+            <span>{{ form.ticket_num.errors }}</span>
+          </div>
+        </div>
         <div class="form-group {% if form.modules.errors %}has-error{% endif %}">
           <label for="{{ form.modules.id_for_label }}" class="col-sm-2 control-label">{{ form.modules.label }}</label>
           <div class="col-sm-6">

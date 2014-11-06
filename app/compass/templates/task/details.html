@@ -69,14 +69,15 @@
       <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
     </div>
     <div class="row">
-      <p class="col-md-6"><b>当前状态：</b><span id="current_status">
+      <p class="col-md-6"><b>AnyPlace票号：</b><span>{{task.ticket_num}}</span></p>
+      <p class="col-md-6"><b>当前状态：</b><span>
           {{req_step.status.name}}{% if req_step.task.info %}（{{req_step.task.info}}）{% endif %}
       </span></p>
+    </div>
+    <div class="row">
+      <p class="col-md-6"><b>发布人：</b><span>{{req_step.assignee|default:"未指定"}}</span></p>
       <p class="col-md-6"><b>发布日期：</b><span>{{req_step.pub_date|default:"待定"}}</span></p>
     </div>
-    <p><b>发布人：</b><span>
-      {{req_step.assignee|default:"未指定"}}
-    </span></p>
     <p><b>确认人：</b><span>{{task.auditor}}</span></p>
     <p><b>修改说明：</b>
     <pre>{{task.explanation}}</pre>

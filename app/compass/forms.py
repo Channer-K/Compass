@@ -280,9 +280,11 @@ class NewTaskForm(forms.ModelForm):
 
     class Meta:
         model = Task
-        fields = ['version', 'modules', 'amendment', 'explanation', 'comment']
+        fields = ['version', 'ticket_num', 'modules', 'amendment',
+                  'explanation', 'comment']
         widgets = {
             'version': forms.TextInput(attrs={'class': 'form-control'}),
+            'ticket_num': forms.TextInput(attrs={'class': 'form-control'}),
             'amendment': forms.TextInput(attrs={'class': 'form-control'}),
             'explanation': forms.Textarea(attrs={'class': 'form-control',
                                                  'rows': '5'}),
@@ -291,6 +293,7 @@ class NewTaskForm(forms.ModelForm):
         }
         error_messages = {
             'version': {'max_length': "Version is too long.", },
+            'ticket_num': {'max_length': "Ticket Number is too long.", },
             'amendment': {'max_length': "Amendment is too long.", },
             'explanation': {'max_length': "Explanation is too long.", },
         }
@@ -340,19 +343,12 @@ class NewTaskForm(forms.ModelForm):
         return task
 
     def _get_auditors(self, task):
-        superiors = set()
         auditors = set()
 
         for module in task.modules.all():
             superior = self.user_cache.role_in_group(module.group).superior
             if superior:
-                superiors.update(superior)
-
-        chief = min([s.level for s in superiors])
-
-        for role in superiors:
-            if role.level == chief:
-                auditors.update(role.user_set.all())
+                auditors.update(superior.user_set.all())
 
         return auditors
 
