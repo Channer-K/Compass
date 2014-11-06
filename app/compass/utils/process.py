@@ -276,14 +276,17 @@ class WaitingForPost(TaskProcessingBase):
                     subtask.pub_date = pub_date
 
                     delta = pub_date - timezone.now()
-                    if (delta.total_seconds() / 3600) >= 6:
-                        """ hard coding here """
-                        planning_status = StatusControl.objects.get(pk=8)
-                        subtask.status = planning_status
-                    else:
-                        subtask.status = subtask.get_next_status()
+                    if subtask == subtask.task.in_progress():
+                        if (delta.total_seconds() / 3600) >= 6:
+                            """ hard coding here """
+                            planning_status = StatusControl.objects.get(pk=8)
+                            subtask.status = planning_status
+                        else:
+                            subtask.status = subtask.get_next_status()
 
-                    update_fields.extend(['pub_date', 'status'])
+                        update_fields.extend(['pub_date', 'status'])
+                    else:
+                        update_fields.append('pub_date')
 
                 subtask.save(update_fields=update_fields)
 
@@ -320,7 +323,7 @@ class WaitingForPost(TaskProcessingBase):
         return
 
     def extra_context(self, request):
-        pub_tasks = self.task.subtask_set.filter(pub_date__isnull=True)
+        pub_tasks = self.task.subtask_set.filter(status_id=4)
         from compass.utils.helper import get_all_online_SAs
         pub_users = get_all_online_SAs()
 
@@ -518,40 +521,51 @@ class Accepted(TaskProcessingBase):
         return False
 
     def run(self, request):
+        from compass.models import User, Subtask, StatusControl
         opt = request.POST.get('opt')
 
         if opt is None:
             return httpForbidden(400, 'Bad request.')
 
-        if opt == 'start':
-            sid = request.POST.get('subtask')
-            date_str = request.POST.get('pub_date')
+        if opt == 'dist':
+            subtask_list = request.POST.getlist('subtask')
+            pub_user = request.POST.getlist('pub_user')
+            date_list = request.POST.getlist('pub_date')
 
-            from compass.models import Subtask, StatusControl
-            subtask = get_object_or_404(Subtask, pk=sid)
+            for idx, user in enumerate(pub_user):
+                if user == '0':
+                    continue
 
-            if date_str == '':
-                return
+                subtask = get_object_or_404(Subtask, pk=subtask_list[idx])
+                assignee = get_object_or_404(User, pk=pub_user[idx])
 
-            pub_date = datetime.strptime(date_str, '%m/%d/%Y %H')
+                subtask.assignee = assignee
 
-            subtask.pub_date = pub_date
+                update_fields = ['assignee']
+                if date_list[idx] != '':
+                    pub_date = datetime.strptime(date_list[idx], '%m/%d/%Y %H')
 
-            delta = pub_date - timezone.now()
-            if (delta.total_seconds() / 3600) >= 6:
-                """ hard coding here """
-                planning_status = StatusControl.objects.get(pk=8)
-                subtask.status = planning_status
-            else:
-                subtask.status = subtask.get_next_status()
+                    subtask.pub_date = pub_date
 
-            subtask.save(update_fields=['pub_date', 'status'])
+                    delta = pub_date - timezone.now()
+                    if subtask == subtask.task.in_progress():
+                        if (delta.total_seconds() / 3600) >= 6:
+                            """ hard coding here """
+                            planning_status = StatusControl.objects.get(pk=8)
+                            subtask.status = planning_status
+                        else:
+                            subtask.status = subtask.get_next_status()
 
-            # re-read the subtask status from database
-            scls = subtask.get_ctrl_cls()
+                        update_fields.extend(['pub_date', 'status'])
+                    else:
+                        update_fields.append('pub_date')
 
-            if scls:
-                scls.send_email(request)
+                subtask.save(update_fields=update_fields)
+
+                scls = subtask.get_ctrl_cls()
+
+                if scls:
+                    scls.send_email(request)
 
     def send_email(self, request, to=None):
         subject = u'【已接受】' + self.task.amendment
@@ -568,7 +582,7 @@ class Accepted(TaskProcessingBase):
                                         extra_context=extra_context)
 
     def extra_context(self, request):
-        pub_tasks = self.task.subtask_set.filter(pub_date__isnull=True)
+        pub_tasks = self.task.subtask_set.filter(status_id=4)
         from compass.utils.helper import get_all_online_SAs
         pub_users = get_all_online_SAs()
 

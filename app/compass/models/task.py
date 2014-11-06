@@ -69,7 +69,7 @@ class Task(models.Model):
 
     def next_progressing(self):
         """
-        Update the progressing_id to the next. This fun can only be performed
+        Update the progressing_id to the next. This func can only be performed
         when status of the current subtask is SuccessPost.
         """
         subtasks = list(self.subtask_set.all())
