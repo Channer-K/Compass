@@ -177,7 +177,7 @@
       {% endwith %}
       {% if req_step.editable %}
       <div class="well">
-        <form action="{% url 'reply' tid=task.pk sid=req_step.pk %}" role="form" method="post" enctype="multipart/form-data">
+        <form action="{% url 'detail' tid=task.pk sid=req_step.pk %}" role="form" method="post" enctype="multipart/form-data">
           {% csrf_token %}
           <div class="form-group {% if form.subject.errors %}has-error{% endif %}">
             <label for="{{form.subject.id_for_label}}">{{form.subject.label}}</label>

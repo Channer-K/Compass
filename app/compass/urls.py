@@ -17,8 +17,6 @@ urlpatterns = patterns(
     url(r'^filter/$', views.filter, name='filter'),
     url(r'^task/(?P<tid>\d+)/step/(?P<sid>\d+)$',
         views.task_detail, name='detail'),
-    url(r'^task/(?P<tid>\d+)/step/(?P<sid>\d+)/reply$',
-        views.post_reply, name='reply'),
     url(r'^task/go-next$', views.task_go_next, name='go-next'),
     url(r'^task/new/$', views.new_task, name='new-task'),
     url(r'^task/terminate/$', views.task_terminate, name='terminate'),

@@ -186,7 +186,34 @@ def task_detail(request, tid, sid):
     else:
         return result
 
-    context = {'task': task, 'req_step': subtask, 'form': ReplyForm()}
+    if request.method == 'POST':
+        form = ReplyForm(request.POST, request.FILES)
+        if form.is_valid():
+            reply = Reply(subtask=subtask, user=request.user,
+                          subject=request.POST.get('subject'),
+                          content=request.POST.get('content'))
+            reply.save()
+
+            files = request.FILES.getlist('uploaded_file')
+            for afile in files:
+                Attachment.objects.create(reply=reply, upload=afile)
+
+            extra_context = {'url': request.build_absolute_uri(),
+                             'username': request.user,
+                             'at_time': task.created_at,
+                             'message': request.POST.get('content')}
+
+            user_list = task.get_stakeholders(exclude=[request.user])
+
+            send_email.delay(subject=u'【新回复】' + task.amendment,
+                             to=[user.email for user in user_list],
+                             extra_context=extra_context)
+
+            return redirect(task_detail, tid=tid, sid=sid)
+    else:
+        form = ReplyForm()
+
+    context = {'task': task, 'req_step': subtask, 'form': form}
 
     ctrl_cls = subtask.get_ctrl_cls()
     if ctrl_cls:
