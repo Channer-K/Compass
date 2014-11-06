@@ -243,53 +243,6 @@ def task_go_next(request):
 
 
 @login_required
-def post_reply(request, tid, sid):
-    flag, result = permissions._check_permission(sid, request.user)
-
-    if flag:
-        subtask = result
-    else:
-        return result
-
-    task = subtask.task
-
-    if request.method == 'POST':
-        form = ReplyForm(request.POST, request.FILES)
-        if form.is_valid():
-            reply = Reply(subtask=subtask, user=request.user,
-                          subject=request.POST.get('subject'),
-                          content=request.POST.get('content'))
-            reply.save()
-
-            files = request.FILES.getlist('uploaded_file')
-            for afile in files:
-                Attachment.objects.create(reply=reply, upload=afile)
-
-            from django.core.urlresolvers import reverse
-            url = request.build_absolute_uri(
-                reverse(task_detail, kwargs={'tid': tid, 'sid': sid})
-                )
-
-            extra_context = {'url': url,
-                             'username': request.user,
-                             'at_time': task.created_at,
-                             'message': request.POST.get('content')}
-
-            user_list = task.get_stakeholders(exclude=[request.user])
-
-            send_email.delay(subject=u'【新回复】' + task.amendment,
-                             to=[user.email for user in user_list],
-                             extra_context=extra_context)
-
-            return redirect(task_detail, tid=tid, sid=sid)
-    else:
-        form = ReplyForm()
-
-    return render(request, 'task/details.html',
-                  {'task': task, 'req_step': subtask, 'form': form})
-
-
-@login_required
 def task_terminate(request):
     user = request.user
     task = get_object_or_404(Task, pk=request.POST.get('tid'))
