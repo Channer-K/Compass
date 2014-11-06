@@ -83,7 +83,7 @@ class MultiFileField(forms.FileField):
     default_error_messages = {
         'min_num': u"Ensure at least %(min_num)s files are uploaded (received %(num_files)s).",
         'max_num': u"Ensure at most %(max_num)s files are uploaded (received %(num_files)s).",
-        'file_size' : u"File: %(uploaded_file_name)s, exceeded maximum upload size.",
+        'file_size' : u"File: %(uploaded_file_name)s, exceeded maximum upload size limit %(limit_size)s M.",
         'error_ext': u'File type is not supported.'
     }
 
@@ -118,7 +118,8 @@ class MultiFileField(forms.FileField):
             if uploaded_file.size > self.maximum_file_size:
                 raise forms.ValidationError(
                     self.error_messages['file_size'] %
-                    {'uploaded_file_name': uploaded_file.name})
+                    {'uploaded_file_name': uploaded_file.name,
+                     'limit_size': settings.MAX_UPLOAD_SIZE/1024/1024})
 
             content_type = uploaded_file.content_type
             if content_type not in settings.CONTENT_TYPES:
@@ -347,10 +348,10 @@ class NewTaskForm(forms.ModelForm):
             if superior:
                 superiors.update(superior)
 
-        highest_level = min([s.level for s in superiors])
+        chief = min([s.level for s in superiors])
 
         for role in superiors:
-            if role.level == highest_level:
+            if role.level == chief:
                 auditors.update(role.user_set.all())
 
         return auditors

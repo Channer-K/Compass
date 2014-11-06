@@ -327,7 +327,7 @@ class WaitingForPost(TaskProcessingBase):
         return {'pub_tasks': pub_tasks, 'pub_users': pub_users}
 
     def send_email(self, request, to=None):
-        subject = u'【等待中】' + self.task.amendment
+        subject = u'【发布任务】' + self.task.amendment
         template_name = 'new_task'
 
         to = list([user.email for user in self.task.get_stakeholders(exclude=[self.task.applicant, self.task.auditor])])

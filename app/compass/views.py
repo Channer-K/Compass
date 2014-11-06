@@ -255,9 +255,11 @@ def post_reply(request, tid, sid):
                              extra_context=extra_context)
 
             return redirect(task_detail, tid=tid, sid=sid)
+    else:
+        form = ReplyForm()
 
-    return httpForbidden(403, 'You do not have sufficient permissions to '
-                              'access this page.')
+    return render(request, 'task/details.html',
+                  {'task': task, 'req_step': subtask, 'form': form})
 
 
 @login_required
