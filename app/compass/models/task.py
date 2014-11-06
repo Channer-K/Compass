@@ -13,7 +13,7 @@ class Task(models.Model):
     applicant = models.ForeignKey(User, verbose_name=u'申请人',
                                   related_name="applicant_set",
                                   related_query_name="task_applicant")
-    version = models.CharField(u'更新版本', max_length=32)
+    version = models.CharField(u'发布版本', max_length=32)
     ticket_num = models.CharField(u'AnyPlace票号', max_length=32,
                                   blank=True, null=True)
     modules = models.ManyToManyField(
@@ -229,7 +229,9 @@ def subtask_post_save(sender, instance, **kwargs):
 class Package(models.Model):
     import re
     from django.core import validators
-    filename = models.CharField(u'文件名', max_length=64)
+    filename = models.CharField(
+        u'文件名', max_length=64,
+        help_text=_('e.g prd-dir20140829-app-v0.tar.gz'))
     path = models.CharField(
         u'路径', max_length=128,
         validators=[validators.RegexValidator(
@@ -237,7 +239,7 @@ class Package(models.Model):
             _('A valid path must start with ftp, http or / and end with /.'),
             'invalid')
         ],
-        help_text=_('Full path without filename.'))
+        help_text=_('e.g ftp://172.26.184.240/appfiles/prd-dir/'))
     authors = models.CharField(
         u'开发者', max_length=64,
         help_text=_('Multiple authors seperated by commas.'))

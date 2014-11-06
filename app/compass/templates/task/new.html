@@ -101,6 +101,7 @@
               </label>
               <div class="col-sm-4 {% if form.filename.errors %}has-error{% endif %}">
                 {{form.filename}}
+                <small>{{form.filename.help_text}}</small>
                 <span>{{form.filename.errors}}</span>
               </div>
               <label for="{{form.path.id_for_label}}"

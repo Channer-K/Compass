@@ -36,9 +36,10 @@ SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
 SCHEDULE_PERIOD = 60*1
 
 #
+Audit_TimeOut = 60*60*2
+#
 Distribute_After = SCHEDULE_PERIOD*20
 #
 Ntf_Before_While_Planning = SCHEDULE_PERIOD*60*24*2
-
 #
 Ntf_Before_While_PandC = SCHEDULE_PERIOD*6
