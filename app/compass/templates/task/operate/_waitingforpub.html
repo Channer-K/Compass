@@ -1,7 +1,7 @@
+{% if perms.compass.distribute_task %}
 <form id="form-{{req_step.pk}}" action="{% url 'go-next' %}" method="POST" role="form">
   {% csrf_token %}
   <input type="hidden" name="sid" value="{{req_step.pk}}">
-  {% if perms.compass.distribute_task %}
   <p><b>任务分配</b></p>
   <table class="table table-hover" style="table-layout: fixed;">
     <thead>
@@ -20,11 +20,10 @@
         <td>
           <select data-toggle='herolist' name="pub_user" class="select-block">
             {% for sa in pub_users %}
-              <option value="{{sa.pk}}" {% if sub.assignee == sa %}selected="selected"{% endif %}>{{sa}}</option>
+              <option value="{{sa.pk}}">{{sa}}</option>
             {% empty %}
               <option value="0">无可分配人员... ...</option>
             {% endfor %}
-              <option value="0">暂不分配</option>
           </select>
         </td>
         <td>
@@ -35,17 +34,15 @@
         </td>
       </tr>
     {% endfor %}
-    {% endif %}
     </tbody>
   </table>
   {% if perms.compass.distribute_task %}
     <button type="submit" class="btn btn-primary btn-sm" name="opt" value="dist">分配任务</button>
-  {% elif req_step.assignee == user %}
-    <button type="submit" class="btn btn-primary btn-sm" name="opt" value="accept">接受，并开始发布</button>
-    <button type="submit" class="btn btn-warning btn-sm" name="opt" value="decline">没时间</button>
   {% endif %}
 </form>
-
+{% else %}
+  <p>赞无可用操作</p>
+{% endif %}
 <script>
   {% for sub in task.subtask_set.all %}
     $("#id_pub_date_{{sub.pk}}").datetimepicker({minDate: 0, timeFormat: 'HH'});
