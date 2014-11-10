@@ -125,8 +125,6 @@ def tasks(request):
 
     if category == 'all':
         task_list = all_tasks
-    # elif category == 'pending':
-        # task_list = [t for t in all_tasks if t.in_progress().status.pk == 3]
     elif category == 'ongoing':
         sids = [4, 5, 6]
         task_list = [t for t in all_tasks if t.in_progress().status.pk in sids]
@@ -279,37 +277,3 @@ def task_terminate(request):
         return httpForbidden(403, 'You do not have sufficient permissions.')
 
     return redirect(tasks)
-
-
-@login_required
-def filter(request):
-    from datetime import datetime
-
-    tasks = permissions.tasks_can_access(request.user)
-
-    from_str = request.POST['from']
-    to_str = request.POST['to']
-
-    f_date, t_date = None, None
-
-    if from_str:
-        f_date = datetime.strptime(from_str, "%m/%d/%Y")
-
-    if to_str:
-        t_date = datetime.strptime(to_str, "%m/%d/%Y")
-    else:
-        t_date = datetime.now()
-
-    if f_date and t_date:
-        tasks = tasks.filter(created_at__range=(f_date, t_date))
-
-    mids = request.POST.getlist('modules')
-    modules = []
-    if mids:
-        modules.extend(models.Module.objects.filter(id__in=mids))
-    else:
-        modules.extend(permissions.modules_can_access(request.user))
-
-    tasks = list(tasks.filter(modules__in=modules))
-
-    return HttpResponse("ok")

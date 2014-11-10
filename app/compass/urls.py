@@ -14,7 +14,6 @@ urlpatterns = patterns(
     url(r'^setOnline/(?P<uid>\d+)$', views.set_online, name='online'),
     url(r'^setOffline/(?P<uid>\d+)$', views.set_offline, name='offline'),
     url(r'^tasks/$', views.tasks, name='tasks'),
-    url(r'^filter/$', views.filter, name='filter'),
     url(r'^task/(?P<tid>\d+)/step/(?P<sid>\d+)$',
         views.task_detail, name='detail'),
     url(r'^task/go-next$', views.task_go_next, name='go-next'),
