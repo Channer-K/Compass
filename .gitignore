@@ -19,3 +19,4 @@ venv/
 *.pyc
 README
 app/celerybeat-schedule.db
+app/compass/static/

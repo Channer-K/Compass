@@ -62,9 +62,6 @@ String.prototype.repeat = function(num) {
       }).addSliderSegments($verticalSlider.slider("option").max, "vertical");
     }
 
-    // Placeholders for input/textarea
-    $(":text, textarea").placeholder();
-
     // Focus state for append/prepend inputs
     $('.input-group').on('focus', '.form-control', function () {
       $(this).closest('.input-group, .form-group').addClass('focus');

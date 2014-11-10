@@ -258,7 +258,7 @@ class FilterForm(forms.Form):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块',
-            widget=forms.SelectMultiple(attrs={'data-toggle': 'herolist'}),
+            widget=forms.CheckboxSelectMultiple(),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 
