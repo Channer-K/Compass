@@ -88,7 +88,13 @@ input[type="checkbox"] { margin: 9px 0 0; }
  * Main content
  */
 
-.main {padding: 30px; margin-left: 251px; position: relative;}
+.main {
+  display: inline-block;
+  width: 82%;
+  padding: 30px;
+  margin-left: 251px;
+  position: relative;
+}
 @media (min-width: 768px) {
   .main {
     padding-right: 100px;
@@ -356,7 +362,7 @@ input[type="checkbox"] { margin: 9px 0 0; }
 .toplist li .desc { color: #FB9337; font-weight: bold; font-size: 11px; }
 
 #footer {
-  position: absolute;
+  position: relative;
   z-index: 1000;
   bottom: 0;
   width: 100%;
