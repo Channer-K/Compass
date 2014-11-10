@@ -1,5 +1,5 @@
 from django.conf.urls import patterns, url
-from django.contrib.auth.views import login, logout_then_login
+from django.contrib.auth.views import login
 from compass import views
 from compass import forms
 
@@ -9,7 +9,7 @@ urlpatterns = patterns(
     url(r'^signin/$', login, {
         'template_name': 'auth/signin.html',
         'authentication_form': forms.SigninForm}, name='signin'),
-    url(r'^signout/$', logout_then_login, name='signout'),
+    url(r'^signout/$', views.logout, name='signout'),
     url(r'^profile/$', views.profile, name='profile'),
     url(r'^setOnline/(?P<uid>\d+)$', views.set_online, name='online'),
     url(r'^setOffline/(?P<uid>\d+)$', views.set_offline, name='offline'),

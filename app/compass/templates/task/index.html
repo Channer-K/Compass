@@ -1,13 +1,5 @@
 {% extends "layout/base.html" %}
 {% load compass_tags %}
-{% block sidebar %}
-<div class="sidebar">
-  <ul class="nav nav-sidebar">
-    <li><a href="{% url 'index' %}">Overview</a></li>
-    <li class="active"><a href="{% url 'tasks' %}">Task</a></li>
-  </ul>
-</div>
-{% endblock %}
 {% block content %}
 <h1 class="page-header">Tasks</h1>
 <div class="contentwrapper">
@@ -15,18 +7,18 @@
     <h3>Filter</h3>
   </div>
   <div class="formContainer">
-    <form id="filter-form" role='form' class="form-horizontal" action="{% url 'filter' %}" method="post" accept-charset="utf-8">
+    <form id="filter-form" role='form' class="form-horizontal" method="get" accept-charset="utf-8">
         {% csrf_token %}
         <div class="contentwrapper">
           <div class="subcontent">
             <div class="form-group">
-              <label class="col-sm-2 control-label">申请时间:</label>
+              <label class="col-sm-2 control-label">创建时间:</label>
               <div class="col-sm-4">
-                <input type="text" class="form-control" name="from-date" id="id_from_date">
+                <input type="text" class="form-control" name="from" id="id_from_date">
                 <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
               <div class="col-sm-4">
-                <input type="text" class="form-control" name="to-date" id="id_to_date">
+                <input type="text" class="form-control" name="to" id="id_to_date">
                 <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
             </div>
@@ -40,42 +32,13 @@
                 {% endfor %}
               </div>
             </div>
-            <div class="form-group">
-              <label for="{{form.status.id_for_label}}" class="col-sm-2 control-label">
-                {{form.status.label}}
-              </label>
-              {% if form.status|length < 6 %}
-                <div class="col-sm-8">
-                  {% for stat in form.status %}
-                    <label class="checkbox-inline">{{stat}}</label>
-                  {% endfor %}
-                </div>
-              {% else %}
-                {% for stat in form.status %}
-                  {% if forloop.counter == 1  %}<div class="col-sm-8">{% endif %}
-                  {% if forloop.counter == 6 %}</div><div class="col-sm-8 col-sm-offset-2">{% endif %}
-                  <label class="checkbox-inline">{{stat}}</label>
-                {% endfor %}
-                </div>
-              {% endif %}
-            </div>
-            <div class="form-group">
-              <label for="{{form.environment.id_for_label}}" class="col-sm-2 control-label">
-                {{form.environment.label}}
-              </label>
-              <div class="col-sm-8">
-                {% for env in form.environment %}
-                  <label class="checkbox-inline">{{ env }}</label>
-                {% endfor %}
-              </div>
-            </div>
           </div>
         </div>
         <div class="actionBar">
           {% if perms.compass.add_task %}
             <a href="{% url 'new-task' %}" class="btn btn-primary btn-sm" style="float: right; margin-left: 5px;">New Task</a>
           {% endif %}
-          <button type="submit" class="btn btn-success btn-sm" style="float: right; margin-left: 5px;">Search</button>
+          <button id="filter-btn" type="submit" class="btn btn-success btn-sm" style="float: right; margin-left: 5px;">Search</button>
         </div>
     </form>
   </div>
@@ -125,17 +88,17 @@
       <ul>
       {% if tasks.has_previous %}
         <li class="previous">
-          <a href="?page={{ tasks.previous_page_number }}" class="fui-arrow-left"></a>
+          <a href="{% add_get page=tasks.previous_page_number %}" class="fui-arrow-left"></a>
         </li>
         {% endif %}
         {% for page in tasks.paginator.page_range %}
           <li {% ifequal page tasks.number  %}class="active"{% endifequal %}>
-            <a href="?page={{ page }}">{{page}}</a>
+            <a href="{% add_get page=page %}">{{page}}</a>
           </li>
         {% endfor %}
         {% if tasks.has_next %}
         <li class="next">
-          <a href="?page={{ tasks.next_page_number }}" class="fui-arrow-right"></a>
+          <a href="{% add_get page=tasks.next_page_number %}" class="fui-arrow-right"></a>
         </li>
         {% endif %}
       </ul>

@@ -75,14 +75,10 @@
         $(this).next('.read-more').children('a').click(function(){
           var curHeight = $(this).parent().prev().height();
           if(curHeight == slideHeight){
-            $(this).parent().prev().animate({
-              height: defHeight
-            }, "normal");
+            $(this).parent().prev().animate({height: defHeight}, "normal");
             $(this).html('Close');
           }else{
-            $(this).parent().prev().animate({
-              height: slideHeight
-            }, "normal");
+            $(this).parent().prev().animate({height: slideHeight}, "normal");
             $(this).html('Read More');
           }
           return false;
@@ -160,21 +156,22 @@
     return false;
   }
 
-  // Register the click event handlers
-  $("#add-pack").click(function () {
-    return addForm(this, "form");
-  });
-  $(".del-pack").click(function () {
-    return deleteForm(this, "form");
-  });
-
   $(function(){
-    $('#filter').click(function(){
-      $('#filter-form').submit();
-    });
+    // Register the click event handlers
+    $("#add-pack").click(function(){return addForm(this, "form");});
+    $(".del-pack").click(function(){return deleteForm(this, "form");});
+    $('#filter').click(function(){$('#filter-form').submit();});
+    $('#reset_id').click(function(){$('#info_id').val('');});
 
-    $('#reset_id').click(function(){
-      $('#info_id').val('');
+    $('#filter-btn').click(function(evt){
+      evt.preventDefault();
+
+      var $form = $("#filter-form");
+      var cur_params = document.URL.split('?')[1];
+      var query_str = window.location.pathname + '?' + cur_params + '&' + $form.serialize();
+
+      // Redirect with new query string
+      window.location.href = query_str;
     });
   });
 }(window.jQuery);

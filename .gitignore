@@ -13,6 +13,7 @@ app/app/
 app/compass/snapshots/
 app/compass/upload/
 app/compass/fixtures/
+app/static/
 venv/
 
 *.pyc

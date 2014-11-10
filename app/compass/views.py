@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
-import json
-from compass.forms import *
-from compass.models import *
+
+from compass import forms, models
 from compass.utils import permissions
 from compass.utils.helper import httpForbidden
 from compass.utils.decorators import ajax_required
@@ -15,6 +14,16 @@ from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.debug import sensitive_post_parameters
 
 
+def logout(request):
+    from django.contrib.auth.views import login
+    from django.contrib.auth import logout as auth_logout
+
+    if request.user.is_authenticated():
+        auth_logout(request)
+
+    return redirect(login)
+
+
 @login_required
 def index(request):
     tasks = permissions.tasks_can_access(request.user)
@@ -25,7 +34,7 @@ def index(request):
     from django.core.exceptions import ObjectDoesNotExist
     try:
         latest = tasks.filter(available=True).filter(
-            editable=True).latest('updated_at')
+            editable=True).latest('created_at')
         replies = latest.in_progress().reply_set.all()[:2]
     except ObjectDoesNotExist:
         latest = None
@@ -42,12 +51,12 @@ def forget_password(request):
         username = request.POST.get('username')
         email = request.POST.get('email')
 
-        user = get_object_or_404(User, username=username)
+        user = get_object_or_404(models.User, username=username)
 
         if user.email != email:
             return httpForbidden(400, 'Bad request.')
 
-        new_password = User.objects.make_random_password()
+        new_password = models.User.objects.make_random_password()
 
         user.set_password(new_password)
         user.save()
@@ -68,25 +77,27 @@ def forget_password(request):
 @login_required
 def profile(request):
     if request.method == "POST":
-        form = ProfileForm(user=request.user, data=request.POST)
+        form = forms.ProfileForm(user=request.user, data=request.POST)
         if form.is_valid():
             form.save()
             messages.success(request,
                              'Your profile has been successfully updated!')
             return redirect(profile)
     else:
-        form = ProfileForm(
+        form = forms.ProfileForm(
             user=request.user,
             initial={'first_name': request.user.first_name,
                      'last_name': request.user.last_name,
                      'email': request.user.email})
     return render(request, 'others/profile.html', {'form': form})
 
+import json
+
 
 @ajax_required
 @ensure_csrf_cookie
 def set_online(request, uid):
-    user = User.objects.get(pk=uid)
+    user = models.User.objects.get(pk=uid)
 
     if not user.at_work:
         user.online()
@@ -97,7 +108,7 @@ def set_online(request, uid):
 @ajax_required
 @ensure_csrf_cookie
 def set_offline(request, uid):
-    user = User.objects.get(pk=uid)
+    user = models.User.objects.get(pk=uid)
 
     if user.at_work:
         user.offline()
@@ -107,13 +118,26 @@ def set_offline(request, uid):
 
 @login_required
 def tasks(request):
-    form = FilterForm(request)
-    tasks_list = request.user.get_user_tasks()
+    category = request.GET.get('category')
+    page = request.GET.get('page')
+
+    all_tasks = request.user.get_user_tasks()
+
+    if category == 'all':
+        task_list = all_tasks
+    # elif category == 'pending':
+        # task_list = [t for t in all_tasks if t.in_progress().status.pk == 3]
+    elif category == 'ongoing':
+        sids = [4, 5, 6]
+        task_list = [t for t in all_tasks if t.in_progress().status.pk in sids]
+    elif category == 'finished':
+        task_list = [t for t in all_tasks if not t.in_progress().editable]
+    else:
+        task_list = all_tasks
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-    paginator = Paginator(tasks_list, 5)
+    paginator = Paginator(task_list, 5)
 
-    page = request.GET.get('page')
     try:
         tasks = paginator.page(page)
     except PageNotAnInteger:
@@ -123,9 +147,8 @@ def tasks(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         tasks = paginator.page(paginator.num_pages)
 
-    context = {'form': form, 'tasks': tasks}
-
-    return render(request, 'task/index.html', context)
+    form = forms.FilterForm(request)
+    return render(request, 'task/index.html', {'tasks': tasks, 'form': form})
 
 
 @login_required
@@ -141,12 +164,12 @@ def new_task(request):
             super(RequiredFormSet, self).__init__(*args, **kwargs)
             for form in self.forms:
                 form.empty_permitted = False
-    PackagesFormSet = formset_factory(PackageForm, extra=1, max_num=10,
+    PackagesFormSet = formset_factory(forms.PackageForm, extra=1, max_num=10,
                                       formset=RequiredFormSet)
 
     if request.method == 'POST':
         # Bond form and formset
-        form = NewTaskForm(request, request.POST)
+        form = forms.NewTaskForm(request, request.POST)
         formset = PackagesFormSet(request.POST, prefix='form')
 
         env_list = request.POST.getlist('environment')
@@ -169,7 +192,7 @@ def new_task(request):
             return redirect(task_detail,
                             tid=task.pk, sid=task.in_progress().pk)
     else:
-        form = NewTaskForm(request)
+        form = forms.NewTaskForm(request)
         formset = PackagesFormSet()
     return render(request, 'task/new.html', {'form': form,
                                              'form_set': formset})
@@ -177,7 +200,7 @@ def new_task(request):
 
 @login_required
 def task_detail(request, tid, sid):
-    task = get_object_or_404(Task, pk=tid)
+    task = get_object_or_404(models.Task, pk=tid)
 
     flag, result = permissions._check_permission(sid, request.user)
 
@@ -187,16 +210,16 @@ def task_detail(request, tid, sid):
         return result
 
     if request.method == 'POST':
-        form = ReplyForm(request.POST, request.FILES)
+        form = forms.ReplyForm(request.POST, request.FILES)
         if form.is_valid():
-            reply = Reply(subtask=subtask, user=request.user,
-                          subject=request.POST.get('subject'),
-                          content=request.POST.get('content'))
+            reply = models.Reply(subtask=subtask, user=request.user,
+                                 subject=request.POST.get('subject'),
+                                 content=request.POST.get('content'))
             reply.save()
 
             files = request.FILES.getlist('uploaded_file')
             for afile in files:
-                Attachment.objects.create(reply=reply, upload=afile)
+                models.Attachment.objects.create(reply=reply, upload=afile)
 
             extra_context = {'url': request.build_absolute_uri(),
                              'username': request.user,
@@ -211,7 +234,7 @@ def task_detail(request, tid, sid):
 
             return redirect(task_detail, tid=tid, sid=sid)
     else:
-        form = ReplyForm()
+        form = forms.ReplyForm()
 
     context = {'task': task, 'req_step': subtask, 'form': form}
 
@@ -245,7 +268,7 @@ def task_go_next(request):
 @login_required
 def task_terminate(request):
     user = request.user
-    task = get_object_or_404(Task, pk=request.POST.get('tid'))
+    task = get_object_or_404(models.Task, pk=request.POST.get('tid'))
 
     from compass.utils.process import FailurePost
     fp_cls = FailurePost(obj=task.in_progress())
@@ -264,16 +287,16 @@ def filter(request):
 
     tasks = permissions.tasks_can_access(request.user)
 
-    from_date = request.POST['from-date']
-    to_date = request.POST['to-date']
+    from_str = request.POST['from']
+    to_str = request.POST['to']
 
     f_date, t_date = None, None
 
-    if from_date:
-        f_date = datetime.strptime(from_date, "%m/%d/%Y")
+    if from_str:
+        f_date = datetime.strptime(from_str, "%m/%d/%Y")
 
-    if to_date:
-        t_date = datetime.strptime(to_date, "%m/%d/%Y")
+    if to_str:
+        t_date = datetime.strptime(to_str, "%m/%d/%Y")
     else:
         t_date = datetime.now()
 
@@ -283,32 +306,10 @@ def filter(request):
     mids = request.POST.getlist('modules')
     modules = []
     if mids:
-        modules.extend(Module.objects.filter(id__in=mids))
+        modules.extend(models.Module.objects.filter(id__in=mids))
     else:
         modules.extend(permissions.modules_can_access(request.user))
 
     tasks = list(tasks.filter(modules__in=modules))
-
-    sids = request.POST.getlist('status')
-    eids = request.POST.getlist('environment')
-
-    sids = sids if sids else StatusControl.objects.all()
-    eids = eids if eids else Environment.objects.all()
-
-    for task in tasks:
-        is_pop = True
-        for s in task.subtask_set.all():
-            if (str(s.status.pk) in sids and str(s.environment.pk) in eids):
-                is_pop = False
-                break
-
-        if is_pop:
-            try:
-                print task
-                tasks.remove(task)
-            except ValueError:
-                return HttpResponse("Fail")
-
-    print tasks
 
     return HttpResponse("ok")

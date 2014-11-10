@@ -2,8 +2,8 @@
 <div id="goTop"></div>
 <!-- navbar here -->
 {% include 'layout/navbar.html' %}
-<div class="container-fluid">
-  {% block sidebar %}{% endblock %}
+<div class="container-fluid" style="position: relative;">
+{% include 'layout/sidebar.html' %}
   <div class="main">
     {% if messages %}
       <!-- alert messages -->

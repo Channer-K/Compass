@@ -247,15 +247,6 @@ class ProfileForm(forms.Form):
 class FilterForm(forms.Form):
     from_date = forms.DateField(label=u'开始时间', input_formats=['%Y-%m-%d'])
     to_date = forms.DateField(label=u'结束时间', input_formats=['%Y-%m-%d'])
-    status = forms.MultipleChoiceField(
-        label=u'任务状态',
-        choices=StatusControl.objects.all().values_list('id', 'name'),
-        widget=forms.CheckboxSelectMultiple())
-    environment = forms.ModelMultipleChoiceField(
-        label=u'发布环境',
-        queryset=Environment.objects.all(),
-        widget=forms.CheckboxSelectMultiple()
-    )
 
     def __init__(self, request, *args, **kwargs):
         super(FilterForm, self).__init__(*args, **kwargs)
@@ -266,7 +257,9 @@ class FilterForm(forms.Form):
             return
 
         self.fields['modules'] = forms.MultipleChoiceField(
-            label=u'发布模块', widget=forms.CheckboxSelectMultiple(),
+            label=u'发布模块',
+            widget=forms.SelectMultiple(attrs={'id': 'id_for_modules',
+                                               'data-toggle': 'herolist'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 

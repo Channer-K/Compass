@@ -116,6 +116,11 @@ class RoleAdmin(admin.ModelAdmin):
     filter_horizontal = ('permissions',)
 
 
+class ModuleAdmin(admin.ModelAdmin):
+
+    list_display = ('name', 'group')
+
+
 class ServerAdmin(admin.ModelAdmin):
     list_display = ('hostname', 'ip', 'is_active', 'comment')
     filter_horizontal = ('groups',)
@@ -175,6 +180,6 @@ admin.site.register(Group, MyGroupAdmin)
 admin.site.register(models.Server, ServerAdmin)
 admin.site.register(models.Environment)
 admin.site.register(models.ServerGroup, ServerGroupAdmin)
-admin.site.register(models.Module)
+admin.site.register(models.Module, ModuleAdmin)
 admin.site.register(models.Role, RoleAdmin)
 # admin.site.register(models.Task, TaskAdmin)

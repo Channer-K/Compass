@@ -285,11 +285,11 @@ class WaitingForPost(TaskProcessingBase):
 
                     update_fields.append('status')
 
+                subtask.save(update_fields=update_fields)
+
                 scls = subtask.get_ctrl_cls()
                 if scls:
                     scls.send_email(request)
-
-                subtask.save(update_fields=update_fields)
 
         return
 

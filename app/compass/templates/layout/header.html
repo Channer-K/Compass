@@ -1,4 +1,4 @@
-{% load staticfiles %}
+{% load compressed %}
 <!DOCTYPE html>
 <html lang="zh">
 <head>
@@ -9,18 +9,13 @@
   <meta name="author" content="">
   <link rel="icon" href="{{ STATIC_URL }}images/favicon.ico">
   <title>Compass Demo Edition</title>
-  <link href="{% static 'css/reset.css' %}" rel="stylesheet">
-  <link href="{% static 'css/bootstrap.css' %}" rel="stylesheet">
-  <link href="{% static 'css/flat-ui.css' %}" rel="stylesheet">
-  <link href="{% static 'css/jquery-ui-1.9.2.css' %}" rel="stylesheet">
-  <link href="{% static 'css/jquery-ui-timepicker-addon.css' %}" rel="stylesheet">
-  <link href="{% static 'css/style.css' %}" rel="stylesheet">
-  <link href="{% static 'css/uploadify/uploadify.css' %}" rel="stylesheet">
-  
-  <!-- jQuery via cdn + local fallback -->
-  <script src="{% static 'js/jquery-1.8.3.js' %}"></script>
-  <script src="{% static 'js/jquery-ui-1.9.2.min.js' %}"></script>
-  <script src="{% static 'js/jquery-ui-timepicker-addon.js' %}"></script>
-  <script src="{% static 'js/uploadify/jquery.uploadify.js' %}"></script>
+
+  <!-- Css -->
+  {% compressed_css 'master' %}
+  {% compressed_css 'jquery' %}
+  {% compressed_css 'custom' %}
+
+  <!-- JS -->
+  {% compressed_js 'master' %}
 </head>
 <body>

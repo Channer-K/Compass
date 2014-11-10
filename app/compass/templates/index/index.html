@@ -3,8 +3,7 @@
 <div class="sidebar">
   <ul class="nav nav-sidebar">
     <li class="active"><a href="{% url 'index' %}">Overview</a></li>
-    <li><a href="{% url 'tasks' %}">Task{% if user.counter.num > 0 %}<span class="navbar-new">
-      {{user.counter.num}}{% endif %}</span></a></li>
+    <li><a href="{% url 'tasks' %}">Tasks</span></a></li>
   </ul>
 </div>
 {% endblock %}

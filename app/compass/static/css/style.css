@@ -46,7 +46,7 @@ span.h3 { font-size: 24px; display: block; }
 .sidebar {display: none;}
 @media (min-width: 768px) {
   .sidebar {
-    position: absolute;
+    position: fixed;
     width: 250px;
     top: 51px;
     bottom: 0;
@@ -356,7 +356,7 @@ input[type="checkbox"] { margin: 9px 0 0; }
 .toplist li .desc { color: #FB9337; font-weight: bold; font-size: 11px; }
 
 #footer {
-  position: relative;
+  position: absolute;
   z-index: 1000;
   bottom: 0;
   width: 100%;
@@ -405,3 +405,8 @@ td.p45 { width:45%; }
 .panel-success a:hover { color: #ffffff; }
 .panel-default > .panel-failure { background-color: #E74C3C; }
 .panel-failure a:hover { color: #ffffff; }
+
+.nav-second-level li a { padding-left: 40px; }
+.sidebar ul li a.active { background-color: #E5E5E5; }
+.select .dropdown-menu { width: 100%; }
+.checkbox-inline { padding-left: 0; }
