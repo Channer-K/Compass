@@ -258,8 +258,7 @@ class FilterForm(forms.Form):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块',
-            widget=forms.SelectMultiple(attrs={'id': 'id_for_modules',
-                                               'data-toggle': 'herolist'}),
+            widget=forms.SelectMultiple(attrs={'data-toggle': 'herolist'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 
