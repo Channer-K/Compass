@@ -127,14 +127,31 @@ def tasks(request):
         task_list = all_tasks
     elif category == 'ongoing':
         sids = [4, 5, 6]
-        task_list = [t for t in all_tasks if t.in_progress().status.pk in sids]
+        tids = [t.pk for t in all_tasks if t.in_progress().status.pk in sids]
+        task_list = all_tasks.filter(pk__in=tids)
     elif category == 'finished':
-        task_list = [t for t in all_tasks if not t.in_progress().editable]
+        tids = [t.pk for t in all_tasks if not t.in_progress().editable]
+        task_list = all_tasks.filter(pk__in=tids)
     else:
         task_list = all_tasks
 
+    # Search Query
     date_from_str, date_to_str = request.GET.get('from'), request.GET.get('to')
-    module_list = request.GET.getlist('modules')
+    mids = request.GET.getlist('modules')
+
+    from datetime import datetime
+    if date_from_str:
+        f_date = datetime.strptime(date_from_str, "%m/%d/%Y")
+        task_list = task_list.filter(created_at__gte=f_date)
+
+    if date_to_str:
+        t_date = datetime.strptime(date_to_str, "%m/%d/%Y")
+        task_list = task_list.filter(created_at__lte=t_date)
+
+    modules = []
+    if mids:
+        modules.extend(models.Module.objects.filter(id__in=mids))
+        task_list = task_list.filter(modules__in=modules)
 
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(task_list, 5)

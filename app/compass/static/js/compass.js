@@ -167,8 +167,8 @@
       evt.preventDefault();
 
       var $form = $("#filter-form");
-      var cur_params = document.URL.split('?')[1];
-      var query_str = window.location.pathname + '?' + cur_params + '&' + $form.serialize();
+      var category = document.URL.split(/\?|\&/)[1];
+      var query_str = window.location.pathname + '?' + category + '&' + $form.serialize();
 
       // Redirect with new query string
       window.location.href = query_str;
