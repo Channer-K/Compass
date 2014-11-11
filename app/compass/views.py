@@ -133,6 +133,9 @@ def tasks(request):
     else:
         task_list = all_tasks
 
+    date_from_str, date_to_str = request.GET.get('from'), request.GET.get('to')
+    module_list = request.GET.getlist('modules')
+
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     paginator = Paginator(task_list, 5)
 

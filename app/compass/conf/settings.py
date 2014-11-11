@@ -11,8 +11,8 @@ DOMAIN = "172.26.184.26:8888"
 SA_GID = 2
 
 # the pk for some specific status
-FailureAudit_STATUS = 1
-FailurePost_STATUS = 2
+FailureAudit_Status = 1
+FailurePost_Status = 2
 SuccessPost_Status = 7
 WaitingForPost_Status = 4
 
@@ -37,8 +37,6 @@ SCHEDULE_PERIOD = 60*1
 
 #
 Audit_TimeOut = 60*60*2
-#
-Distribute_After = SCHEDULE_PERIOD*20
 #
 Ntf_Before_While_Planning = SCHEDULE_PERIOD*60*24*2
 #

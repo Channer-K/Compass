@@ -61,15 +61,13 @@ def check_tasks():
             subject = u'【任务提醒】' + subtask.task.amendment
             url = urlparse("http://" + settings.DOMAIN +
                            reverse(task_detail, kwargs={'tid': subtask.task.pk,
-                                                        'sid': subtask.pk})
-                           )
+                                                        'sid': subtask.pk}))
 
             contxt = {'url': url.geturl(),
                       'task_title': subtask.task.amendment,
                       'version': subtask.task.version}
             to = [subtask.assignee.email] if subtask.pk == 5 else [subtask.task.applicant.email]
 
-            send_email.delay(subject=subject,
-                             to=to,
+            send_email.delay(subject=subject, to=to,
                              template_name='pub_confirm_notify',
                              extra_context=contxt)

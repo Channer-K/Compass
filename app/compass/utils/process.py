@@ -80,11 +80,11 @@ class FailureAudit(TaskProcessingBase):
     """ 审核失败 """
     def get_status_in_failure(self):
         from compass.models import StatusControl
-        return StatusControl.objects.get(pk=settings.FailureAudit_STATUS)
+        return StatusControl.objects.get(pk=settings.FailureAudit_Status)
 
     def run(self, request):
         from compass.models import StatusControl
-        failAudit = StatusControl.objects.get(pk=settings.FailureAudit_STATUS)
+        failAudit = StatusControl.objects.get(pk=settings.FailureAudit_Status)
         self.task.subtask_set.update(status=failAudit)
 
         self.task.force_terminate(request.POST['info'])
@@ -122,7 +122,7 @@ class FailurePost(TaskProcessingBase):
 
     def run(self, request):
         from compass.models import StatusControl
-        failurePost = StatusControl.objects.get(pk=settings.FailurePost_STATUS)
+        failurePost = StatusControl.objects.get(pk=settings.FailurePost_Status)
         self.task.subtask_set.update(status=failurePost)
 
         self.task.force_terminate(request.POST['info'])
