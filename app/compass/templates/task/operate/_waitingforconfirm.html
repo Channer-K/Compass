@@ -2,16 +2,16 @@
   {% csrf_token %}
   <input type="hidden" name="sid" value="{{req_step.pk}}">
   {% if user == task.applicant %}
-    <button id="id_confirm_btn" class="btn btn-primary btn-sm" type="submit" name="opt" value="yes">确认发布</button>
+    <a id="id_confirm_btn" class="btn btn-primary btn-sm">确认发布</a>
   {% endif %}
   {% if user == req_step.assignee %}
-    <a class="btn btn-warning btn-sm" id="terminate-btn">终止发布</a>
+    <a id="id_terminate_btn" class="btn btn-warning btn-sm">终止发布</a>
   {% endif %}
 </form>
 
 <div id="dialog-confirm" title="确认结果？">
   <p><span class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>
-  系统建议您通过本页的留言功能上传确认的结果（比如截图、日志或说明等）。若已上传，请点击确认按钮，否则，请点击取消按钮。
+  系统建议您通过本页的留言功能上传确认的结果（比如截图、日志或说明等）。若已上传，请点击继续按钮，否则，请点击取消按钮。
   </p>
 </div>
 
@@ -36,6 +36,9 @@ $( "#dialog-confirm" ).dialog({
   buttons: [{
     text: "继续",
     click: function() {
+      $('<input>').attr({type: 'hidden', name: "opt", value: "yes"}).appendTo($form);
+      $form.submit();
+
       $( this ).dialog( "close" );
     }
   },
@@ -74,7 +77,7 @@ $('#id_confirm_btn').click(function(env){
   $( "#dialog-confirm" ).dialog("open");
 });
 
-$('#terminate-btn').click(function(env){
+$('#id_terminate_btn').click(function(env){
   env.preventDefault();
   $("#terminate-div").dialog("open");
 });
