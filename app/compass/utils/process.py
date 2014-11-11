@@ -418,7 +418,7 @@ class Posting(TaskProcessingBase):
 
             messages.success(
                 request,
-                'Awaiting a successful confirmation from the developer.')
+                'Please waiting a successful confirmation from the developer.')
         else:
             return httpForbidden(400, 'Bad request.')
         return

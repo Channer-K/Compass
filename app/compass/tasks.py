@@ -66,7 +66,10 @@ def check_tasks():
             contxt = {'url': url.geturl(),
                       'task_title': subtask.task.amendment,
                       'version': subtask.task.version}
-            to = [subtask.assignee.email] if subtask.pk == 5 else [subtask.task.applicant.email]
+            if subtask.status_id == 5:
+                to = [subtask.assignee.email]
+            else:
+                to = [subtask.task.applicant.email]
 
             send_email.delay(subject=subject, to=to,
                              template_name='pub_confirm_notify',

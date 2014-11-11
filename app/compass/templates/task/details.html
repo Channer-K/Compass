@@ -110,7 +110,6 @@
         $('#forcing-close').click(function(){
           $("#close-div").dialog({
             resizable: false,
-            height:180,
             width:600,
             modal: true,
             buttons: {
@@ -121,12 +120,6 @@
               "取消": function() {
                 $( this ).dialog("close");
               }
-            },
-            open:function () {
-              $(this).closest(".ui-dialog").find("button").each(function(){
-                $(this).addClass("btn btn-primary");
-                $(this).css("font-size", "12px");
-              });
             }
           });
         });

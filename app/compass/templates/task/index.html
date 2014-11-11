@@ -14,11 +14,11 @@
             <div class="form-group">
               <label class="col-sm-2 control-label">创建时间:</label>
               <div class="col-sm-4">
-                <input type="text" class="form-control" name="from" id="id_from_date">
+                <input type="text" class="form-control" name="from" id="id_from_date" value="{{request.GET.from}}">
                 <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
               <div class="col-sm-4">
-                <input type="text" class="form-control" name="to" id="id_to_date">
+                <input type="text" class="form-control" name="to" id="id_to_date" value="{{request.GET.to}}">
                 <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
               </div>
             </div>
@@ -28,7 +28,7 @@
               </label>
               <div class="col-sm-8">
                 {% for module in form.modules %}
-                  <label class="checkbox-inline">{{ module }}</label>
+                  <label class="checkbox-inline">{{module.tag}}{{ module.choice_label }}</label>
                 {% endfor %}
               </div>
             </div>
@@ -92,7 +92,7 @@
         </li>
         {% endif %}
         {% for page in tasks.paginator.page_range %}
-          <li {% ifequal page tasks.number  %}class="active"{% endifequal %}>
+          <li {% ifequal page tasks.number %}class="active"{% endifequal %}>
             <a href="{% add_get page=page %}">{{page}}</a>
           </li>
         {% endfor %}
