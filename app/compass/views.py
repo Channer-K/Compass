@@ -165,7 +165,7 @@ def tasks(request):
         # If page is out of range (e.g. 9999), deliver last page of results.
         tasks = paginator.page(paginator.num_pages)
 
-    form = forms.FilterForm(request)
+    form = forms.FilterForm(request, initial={'modules': mids})
     return render(request, 'task/index.html', {'tasks': tasks, 'form': form})
 
 
