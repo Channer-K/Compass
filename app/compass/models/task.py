@@ -129,6 +129,20 @@ class Task(models.Model):
 
         return
 
+    @classmethod
+    def get_active_tasks(cls, user):
+        from compass.utils import permissions
+        tasks = permissions.tasks_can_access(user)
+
+        if user.is_in_SA:
+            sids = [4, 5, 6, 8]
+        else:
+            sids = [3, 4, 5, 6, 8]
+        tids = [t.pk for t in tasks if t.in_progress().status.pk in sids]
+        tasks = tasks.filter(pk__in=tids)
+
+        return tasks
+
 
 @receiver(pre_save, sender=Task)
 def task_pre_save(sender, instance, **kwargs):

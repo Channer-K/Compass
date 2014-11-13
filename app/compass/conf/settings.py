@@ -40,4 +40,4 @@ Ntf_Before_While_Planning = 60*60*3
 #
 Ntf_Before_While_PandC = 60*60*3
 #
-Chg_Before_While_planning = 60*60
+Chg_Before_While_Planning = 60*60

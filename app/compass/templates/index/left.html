@@ -17,7 +17,7 @@
               <small>Submitted by: 
                 <strong>{{approval.applicant}}</strong> - {{approval.created_at}}
               </small>
-              <p><b>申请时间：</b><span>{{approval.created_at}}</span></p>
+              <p><b>申请时间：</b><span>{{approval.created_at|date:"SHORT_DATETIME_FORMAT"}}</span></p>
               <p><b>发布版本：</b><span>{{approval.version}}</span></p>
               <p><b>发布模块：</b><span>{{approval.get_all_modules|join:" | "}}</span></p>
               <p>
@@ -104,11 +104,11 @@
             </div>
             <div class="row">
               <p class="col-md-6">当前状态：<span>{{latest.in_progress.status.name}}</span></p>
-              <p class="col-md-6">当前环境：<span>{{latest.in_progress.environment.name}}</span></p>
+              <p class="col-md-6">当前发布：<span>{{latest.in_progress.environment.name}}</span></p>
             </div>
             <div class="row">
               <p class="col-md-6">确认人：<span>{{latest.auditor}}</span></p>
-              <p class="col-md-6">发布日期：<span>{{latest.in_progress.pub_date}}</span></p>
+              <p class="col-md-6">发布日期：<span>{{latest.in_progress.pub_date|date:"SHORT_DATETIME_FORMAT"|default:"待定"}}</span></p>
             </div>
             <p>发布包：
               {% for package in latest.package_set.all %}

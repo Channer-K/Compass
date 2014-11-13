@@ -36,9 +36,7 @@ def tasks_can_access(user):
     """
     from compass.models import Task
     tasks = None
-    if user.is_superuser:
-        tasks = Task.objects.all()
-    elif user.is_in_SA:
+    if user.is_in_SA:
         tasks = Task.objects.all().filter(available=True)
     elif user.is_leader:
         tasks = Task.objects.filter(

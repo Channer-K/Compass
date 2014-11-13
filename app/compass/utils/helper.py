@@ -145,3 +145,15 @@ def get_all_online_SAs():
         online_SAs.update(group.user_set.all().filter(at_work=True))
 
     return online_SAs
+
+
+def get_relative_tasks(user, tasks):
+    tids = []
+
+    for task in tasks:
+        progressing_task = task.in_progress()
+        ctrl_cls = progressing_task.get_ctrl_cls()
+        if ctrl_cls.can_execute(progressing_task, user):
+            tids.append(task.pk)
+
+    return tasks.filter(pk__in=tids)

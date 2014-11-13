@@ -3,7 +3,7 @@ from __future__ import absolute_import
 
 from compass import forms, models
 from compass.utils import permissions
-from compass.utils.helper import httpForbidden
+from compass.utils.helper import httpForbidden, get_relative_tasks
 from compass.utils.decorators import ajax_required
 from compass.utils.notification import send_email
 from django.http import HttpResponse
@@ -125,10 +125,11 @@ def tasks(request):
 
     if category == 'all':
         task_list = all_tasks
+    elif category == 'relative':
+        active_tasks = models.Task.get_active_tasks(request.user)
+        task_list = get_relative_tasks(request.user, active_tasks)
     elif category == 'ongoing':
-        sids = [4, 5, 6, 8]
-        tids = [t.pk for t in all_tasks if t.in_progress().status.pk in sids]
-        task_list = all_tasks.filter(pk__in=tids)
+        task_list = models.Task.get_active_tasks(request.user)
     elif category == 'finished':
         tids = [t.pk for t in all_tasks if not t.in_progress().editable]
         task_list = all_tasks.filter(pk__in=tids)
