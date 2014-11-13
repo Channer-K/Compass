@@ -12,7 +12,32 @@ from compass.utils.notification import send_email
 
 
 @app.task
-def check_tasks():
+def change_status():
+    planning_subtasks = Subtask.objects.filter(editable=True, status_id=8)
+
+    for subtask in planning_subtasks:
+        delta = subtask.pub_date - datetime.now()
+        if delta.total_seconds() <= settings.Chg_Before_While_planning:
+            subject = u'【任务提醒】' + subtask.task.amendment
+            subtask.status = subtask.get_next_status()
+            subtask.save(update_fields=['status'])
+
+            url = urlparse("http://" + settings.DOMAIN +
+                           reverse(task_detail, kwargs={'tid': subtask.task.pk,
+                                                        'sid': subtask.pk})
+                           ).geturl()
+            contxt = {'at_time': subtask.pub_date, 'url': url,
+                      'task_title': subtask.task.amendment,
+                      'version': subtask.task.version}
+
+            send_email.delay(subject=subject,
+                             to=[subtask.assignee.email],
+                             template_name='planning_notify',
+                             extra_context=contxt)
+
+
+@app.task
+def task_notification():
     """ hard coding here """
     auditing_tasks = Task.objects.filter(editable=True, available=False)
     planning_subtasks = Subtask.objects.filter(editable=True, status_id=8)
@@ -39,26 +64,21 @@ def check_tasks():
 
     for subtask in planning_subtasks:
         delta = subtask.pub_date - datetime.now()
-        if (delta.total_seconds() > 60*60 and
+        if (delta.total_seconds() > settings.Chg_Before_While_planning and
                 delta.total_seconds() <= settings.Ntf_Before_While_Planning):
             subject = u'【计划发布】' + subtask.task.amendment
-        elif delta.total_seconds() <= 60*60:
-            subject = u'【任务提醒】' + subtask.task.amendment
-            subtask.status = subtask.get_next_status()
-            subtask.save(update_fields=['status'])
+            url = urlparse("http://" + settings.DOMAIN +
+                           reverse(task_detail, kwargs={'tid': subtask.task.pk,
+                                                        'sid': subtask.pk})
+                           ).geturl()
+            contxt = {'at_time': subtask.pub_date, 'url': url,
+                      'task_title': subtask.task.amendment,
+                      'version': subtask.task.version}
 
-        url = urlparse("http://" + settings.DOMAIN +
-                       reverse(task_detail, kwargs={'tid': subtask.task.pk,
-                                                    'sid': subtask.pk})
-                       ).geturl()
-        contxt = {'at_time': subtask.pub_date, 'url': url,
-                  'task_title': subtask.task.amendment,
-                  'version': subtask.task.version}
-
-        send_email.delay(subject=subject,
-                         to=[subtask.assignee.email],
-                         template_name='planning_notify',
-                         extra_context=contxt)
+            send_email.delay(subject=subject,
+                             to=[subtask.assignee.email],
+                             template_name='planning_notify',
+                             extra_context=contxt)
 
     for subtask in pub_confirm_subtasks:
         delta = datetime.now() - subtask.updated_at
