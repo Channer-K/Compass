@@ -13,7 +13,6 @@ TPL_PATH = 'task/operate/'
 class TaskProcessingBase(object):
     """ Base class """
     def __init__(self, obj=None):
-        super(TaskProcessingBase, self).__init__()
         self.obj = obj
         self.task = self.obj.task
         self.render_id = '%s_%s' % ('sub', self.obj.pk)
@@ -37,31 +36,34 @@ class TaskProcessingBase(object):
     def extra_context(self, requset):
         return None
 
-    def send_mail(self, request, subject=None, to=None,
+    def send_mail(self, request,
+                  subject=None, to=None,
                   template_name='default_email_tpl',
                   extra_context=None):
 
         if subject is None:
             subject = u'【更新】' + self.task.amendment
 
-        to = [self.task.applicant.email] if to is None else list(to)
+        if to is None:
+            to = [self.task.applicant.email]
 
         from urlparse import urlparse
         from compass.views import task_detail
         from django.core.urlresolvers import reverse
+
         # re-read from database
         from compass.models import Subtask
         subtask = Subtask.objects.get(pk=self.obj.pk)
-        if subtask.editable:
-            url = urlparse("http://" + settings.DOMAIN +
-                           reverse(task_detail, kwargs={'tid': self.task.pk,
-                                                        'sid': self.obj.pk})
-                           )
-        else:
-            url = urlparse("http://" + settings.DOMAIN +
-                           "/history/" + self.obj.url_token + ".html")
 
-        ctx = {'url': url.geturl(), 'at_time': self.task.created_at,
+        if subtask.editable:
+            url = urlparse("http://" + settings.DOMAIN + reverse(
+                task_detail, kwargs={'tid': self.task.pk, 'sid': self.obj.pk})
+            ).geturl()
+        else:
+            url = urlparse("http://" + settings.DOMAIN + "/history/" +
+                           self.obj.url_token + ".html").geturl()
+
+        ctx = {'url': url, 'at_time': self.task.updated_at,
                'username': self.task.applicant}
 
         if extra_context is not None:
@@ -100,7 +102,7 @@ class FailureAudit(TaskProcessingBase):
     def send_email(self, request):
         subject = u'【驳回】' + self.task.amendment
         template_name = 'reject'
-        extra_context = {'username': request.user,
+        extra_context = {'username': self.task.auditor,
                          'task_title': self.task.amendment,
                          'info': self.task.info, 'version': self.task.version}
 
@@ -304,7 +306,10 @@ class WaitingForPost(TaskProcessingBase):
         subject = u'【发布任务】' + self.task.amendment
         template_name = 'new_task'
 
-        to = list([user.email for user in self.task.get_stakeholders(exclude=[self.task.applicant, self.task.auditor])])
+        recipients = self.task.get_stakeholders(exclude=[self.task.applicant,
+                                                         self.task.auditor])
+
+        to = list([user.email for user in recipients])
 
         extra_context = {'task_title': self.task.amendment,
                          'version': self.task.version}

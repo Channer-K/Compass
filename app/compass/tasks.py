@@ -39,21 +39,26 @@ def check_tasks():
 
     for subtask in planning_subtasks:
         delta = subtask.pub_date - datetime.now()
-        if delta.total_seconds() <= settings.Ntf_Before_While_Planning:
+        if (delta.total_seconds() > 60*60 and
+                delta.total_seconds() <= settings.Ntf_Before_While_Planning):
             subject = u'【计划发布】' + subtask.task.amendment
-            url = urlparse("http://" + settings.DOMAIN +
-                           reverse(task_detail, kwargs={'tid': subtask.task.pk,
-                                                        'sid': subtask.pk})
-                           )
-            contxt = {'at_time': subtask.pub_date,
-                      'url': url.geturl(),
-                      'task_title': subtask.task.amendment,
-                      'version': subtask.task.version}
+        elif delta.total_seconds() <= 60*60:
+            subject = u'【任务提醒】' + subtask.task.amendment
+            subtask.status = subtask.get_next_status()
+            subtask.save(update_fields=['status'])
 
-            send_email.delay(subject=subject,
-                             to=[subtask.assignee.email],
-                             template_name='planning_notify',
-                             extra_context=contxt)
+        url = urlparse("http://" + settings.DOMAIN +
+                       reverse(task_detail, kwargs={'tid': subtask.task.pk,
+                                                    'sid': subtask.pk})
+                       ).geturl()
+        contxt = {'at_time': subtask.pub_date, 'url': url,
+                  'task_title': subtask.task.amendment,
+                  'version': subtask.task.version}
+
+        send_email.delay(subject=subject,
+                         to=[subtask.assignee.email],
+                         template_name='planning_notify',
+                         extra_context=contxt)
 
     for subtask in pub_confirm_subtasks:
         delta = datetime.now() - subtask.updated_at

@@ -277,10 +277,13 @@ input[type="checkbox"] { margin: 9px 0 0; }
 }
 .entry_content h4 a:hover { color: #68768d; }
 .entry_content p { margin: 5px 0; font-size: 13px; }
-/*.entry_content p:last-child { margin-bottom: 0; }*/
 
 /* Process Style */
-.process { list-style: none; }
+.process {
+  list-style: none;
+  display: inline-block;
+  width: 100%;
+}
 .process li {
   float: left;
   width: 33%;

@@ -33,8 +33,8 @@ def index(request):
 
     from django.core.exceptions import ObjectDoesNotExist
     try:
-        latest = tasks.filter(available=True).filter(
-            editable=True).latest('created_at')
+        latest = tasks.filter(available=True,
+                              editable=True).latest('created_at')
         replies = latest.in_progress().reply_set.all()[:2]
     except ObjectDoesNotExist:
         latest = None
@@ -126,7 +126,7 @@ def tasks(request):
     if category == 'all':
         task_list = all_tasks
     elif category == 'ongoing':
-        sids = [4, 5, 6]
+        sids = [4, 5, 6, 8]
         tids = [t.pk for t in all_tasks if t.in_progress().status.pk in sids]
         task_list = all_tasks.filter(pk__in=tids)
     elif category == 'finished':
@@ -139,13 +139,15 @@ def tasks(request):
     date_from_str, date_to_str = request.GET.get('from'), request.GET.get('to')
     mids = request.GET.getlist('modules')
 
-    from datetime import datetime
+    import datetime
     if date_from_str:
-        f_date = datetime.strptime(date_from_str, "%m/%d/%Y")
+        f_date = datetime.datetime.strptime(date_from_str, "%m/%d/%Y")
         task_list = task_list.filter(created_at__gte=f_date)
 
     if date_to_str:
-        t_date = datetime.strptime(date_to_str, "%m/%d/%Y")
+        t_date = datetime.datetime.strptime(date_to_str, "%m/%d/%Y") + \
+            datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
+
         task_list = task_list.filter(created_at__lte=t_date)
 
     modules = []

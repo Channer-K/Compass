@@ -33,11 +33,9 @@ MAX_UPLOAD_SIZE = 1024*1024*20
 
 SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
 
-SCHEDULE_PERIOD = 60*1
-
 #
 Audit_TimeOut = 60*60*2
 #
-Ntf_Before_While_Planning = SCHEDULE_PERIOD*60*24*2
+Ntf_Before_While_Planning = 60*60*3
 #
-Ntf_Before_While_PandC = SCHEDULE_PERIOD*6
+Ntf_Before_While_PandC = 60*60*3

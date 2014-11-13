@@ -48,6 +48,13 @@ class Task(models.Model):
             ", ".join([p.name for p in self.modules.all()]),
             self.version, self.created_at)
 
+    def save(self, *args, **kwargs):
+        if 'update_fields' in kwargs:
+            kwargs['update_fields'] = list(
+                set(list(kwargs['update_fields']) + ['updated_at']))
+
+        return super(Task, self).save(*args, **kwargs)
+
     def make_available(self, auditor=None):
         update_fields = ['available']
 
