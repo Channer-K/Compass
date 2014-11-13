@@ -3,7 +3,11 @@ from __future__ import absolute_import
 
 from compass import forms, models
 from compass.utils import permissions
-from compass.utils.helper import httpForbidden, get_relative_tasks
+from compass.utils.helper import (
+    httpForbidden,
+    get_relative_tasks,
+    get_active_tasks
+)
 from compass.utils.decorators import ajax_required
 from compass.utils.notification import send_email
 from django.http import HttpResponse
@@ -27,14 +31,15 @@ def logout(request):
 @login_required
 def index(request):
     tasks = permissions.tasks_can_access(request.user)
+    active_tasks = get_active_tasks(request.user, tasks)
     approvals = tasks.filter(available=False,
                              editable=True,
                              auditor=request.user)
 
     from django.core.exceptions import ObjectDoesNotExist
     try:
-        latest = tasks.filter(available=True,
-                              editable=True).latest('created_at')
+        relative_tasks = get_relative_tasks(request.user, active_tasks)
+        latest = relative_tasks.latest('updated_at')
         replies = latest.in_progress().reply_set.all()[:2]
     except ObjectDoesNotExist:
         latest = None
@@ -126,10 +131,10 @@ def tasks(request):
     if category == 'all':
         task_list = all_tasks
     elif category == 'relative':
-        active_tasks = models.Task.get_active_tasks(request.user)
+        active_tasks = get_active_tasks(request.user, all_tasks)
         task_list = get_relative_tasks(request.user, active_tasks)
     elif category == 'ongoing':
-        task_list = models.Task.get_active_tasks(request.user)
+        task_list = get_active_tasks(request.user, all_tasks)
     elif category == 'finished':
         tids = [t.pk for t in all_tasks if not t.in_progress().editable]
         task_list = all_tasks.filter(pk__in=tids)

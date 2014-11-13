@@ -147,6 +147,16 @@ def get_all_online_SAs():
     return online_SAs
 
 
+def get_active_tasks(user, tasks):
+    tasks = tasks.filter(editable=True)
+
+    if user.is_in_SA:
+        tids = [t.pk for t in tasks if t.in_progress().status.pk == 3]
+        tasks = tasks.exclude(pk__in=tids)
+
+    return tasks
+
+
 def get_relative_tasks(user, tasks):
     tids = []
 
