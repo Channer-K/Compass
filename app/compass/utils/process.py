@@ -231,7 +231,7 @@ class SuccessPost(TaskProcessingBase):
         subject = u'【成功】' + self.task.amendment
         template_name = 'success'
 
-        to = list([user.email for user in self.task.get_stakeholders()])
+        to = [user.email for user in self.task.get_stakeholders()]
 
         extra_context = {'task_title': self.task.amendment,
                          'version': self.task.version}
@@ -430,7 +430,7 @@ class Posting(TaskProcessingBase):
 
     def send_email(self, request):
         template_name = 'posting'
-        subject = u'【发布中】' + self.task.amendment
+        subject = u'【任务提醒】' + self.task.amendment
 
         to = list([user.email for user in self.task.get_stakeholders()])
 

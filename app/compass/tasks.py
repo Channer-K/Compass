@@ -67,10 +67,11 @@ def task_notification():
         if (delta.total_seconds() > settings.Chg_Before_While_planning and
                 delta.total_seconds() <= settings.Ntf_Before_While_Planning):
             subject = u'【计划发布】' + subtask.task.amendment
-            url = urlparse("http://" + settings.DOMAIN +
-                           reverse(task_detail, kwargs={'tid': subtask.task.pk,
-                                                        'sid': subtask.pk})
-                           ).geturl()
+            url = urlparse(
+                "http://" + settings.DOMAIN +
+                reverse(task_detail, kwargs={'tid': subtask.task.pk,
+                                             'sid': subtask.pk})
+                ).geturl()
             contxt = {'at_time': subtask.pub_date, 'url': url,
                       'task_title': subtask.task.amendment,
                       'version': subtask.task.version}

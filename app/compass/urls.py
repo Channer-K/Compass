@@ -9,7 +9,7 @@ urlpatterns = patterns(
     url(r'^signin/$', login, {
         'template_name': 'auth/signin.html',
         'authentication_form': forms.SigninForm}, name='signin'),
-    url(r'^signout/$', views.logout, name='signout'),
+    url(r'^signout/$', views.signout, name='signout'),
     url(r'^profile/$', views.profile, name='profile'),
     url(r'^setOnline/(?P<uid>\d+)$', views.set_online, name='online'),
     url(r'^setOffline/(?P<uid>\d+)$', views.set_offline, name='offline'),

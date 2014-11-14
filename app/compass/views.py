@@ -18,7 +18,7 @@ from django.contrib.auth.decorators import permission_required, login_required
 from django.views.decorators.debug import sensitive_post_parameters
 
 
-def logout(request):
+def signout(request):
     from django.contrib.auth.views import login
     from django.contrib.auth import logout as auth_logout
 
