@@ -26,13 +26,12 @@ def can_read_task(user, subtask):
 
 def tasks_can_access(user):
     """
-    Getting the tasks that request user can access
+    Getting the tasks that login user has permission to access
 
-    1. All tasks when request user is superuser
-    2. Those whose applicants are request user's subordinates
-    3. Those be audited when user in SA.
-    4. Only for those that posted by himself
-
+    1. User can access his subordinates' tasks when he is a leader in Dev.
+    2. User in SA can access those which be verified and qualified.
+    3. Those created by themselves are accessible if not meeting above
+       conditions.
     """
     from compass.models import Task
     tasks = None

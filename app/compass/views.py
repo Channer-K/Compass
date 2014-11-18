@@ -186,6 +186,7 @@ def new_task(request):
     from django.forms.formsets import formset_factory, BaseFormSet
 
     class RequiredFormSet(BaseFormSet):
+
         def __init__(self, *args, **kwargs):
             super(RequiredFormSet, self).__init__(*args, **kwargs)
             for form in self.forms:

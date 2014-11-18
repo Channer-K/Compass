@@ -52,7 +52,7 @@ def task_notification():
                 "http://" + settings.DOMAIN +
                 reverse(task_detail, kwargs={'tid': task.pk,
                                              'sid': task.in_progress().pk})
-                )
+            )
             contxt = {'url': url.geturl(),
                       'task_title': task.amendment,
                       'version': task.version}
@@ -71,7 +71,7 @@ def task_notification():
                 "http://" + settings.DOMAIN +
                 reverse(task_detail, kwargs={'tid': subtask.task.pk,
                                              'sid': subtask.pk})
-                ).geturl()
+            ).geturl()
             contxt = {'at_time': subtask.pub_date, 'url': url,
                       'task_title': subtask.task.amendment,
                       'version': subtask.task.version}

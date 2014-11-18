@@ -9,9 +9,10 @@ from django.utils.translation import ugettext_lazy as _
 
 
 class SigninForm(forms.Form):
+
     """
-    Base class for authenticating users. Extend this to get a form that accepts
-    username/password logins.
+    Base class for authenticating users.
+    Extend this to get a form that accepts username/password logins.
     """
     username = forms.CharField(max_length=30, required=True)
     password = forms.CharField(widget=forms.PasswordInput, required=True)
@@ -67,6 +68,7 @@ class SigninForm(forms.Form):
 
 
 class MultiFileInput(forms.FileInput):
+
     def render(self, name, value, attrs={}):
         attrs['multiple'] = 'multiple'
         return super(MultiFileInput, self).render(name, None, attrs=attrs)
@@ -83,7 +85,7 @@ class MultiFileField(forms.FileField):
     default_error_messages = {
         'min_num': u"Ensure at least %(min_num)s files are uploaded (received %(num_files)s).",
         'max_num': u"Ensure at most %(max_num)s files are uploaded (received %(num_files)s).",
-        'file_size' : u"File: %(uploaded_file_name)s, exceeded maximum upload size limit %(limit_size)s M.",
+        'file_size': u"File: %(uploaded_file_name)s, exceeded maximum upload size limit %(limit_size)s M.",
         'error_ext': u'File type is not supported.'
     }
 
@@ -119,7 +121,7 @@ class MultiFileField(forms.FileField):
                 raise forms.ValidationError(
                     self.error_messages['file_size'] %
                     {'uploaded_file_name': uploaded_file.name,
-                     'limit_size': settings.MAX_UPLOAD_SIZE/1024/1024})
+                     'limit_size': settings.MAX_UPLOAD_SIZE / 1024 / 1024})
 
             content_type = uploaded_file.content_type
             if content_type not in settings.CONTENT_TYPES:
@@ -151,29 +153,29 @@ class ProfileForm(forms.Form):
     first_name = forms.CharField(
         required=False, label=u'First name', max_length=30,
         widget=forms.TextInput(attrs={'class': 'form-control'})
-        )
+    )
     last_name = forms.CharField(
         required=False, label=u'Last name', max_length=30,
         widget=forms.TextInput(attrs={'class': 'form-control'})
-        )
+    )
     email = forms.EmailField(
         label=u"Email", max_length=254,
         widget=forms.EmailInput(attrs={'class': 'form-control',
                                        'placeholder': '@pset.suntec.net'})
-        )
+    )
 
     old_password = forms.CharField(
         required=False, label=_("Old password"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
-        )
+    )
     new_password1 = forms.CharField(
         required=False, label=_("New password"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
-        )
+    )
     new_password2 = forms.CharField(
         required=False, label=_("New password confirmation"),
         widget=forms.PasswordInput(attrs={'class': 'form-control'})
-        )
+    )
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -346,6 +348,7 @@ class NewTaskForm(forms.ModelForm):
 
 
 class PackageForm(forms.ModelForm):
+
     class Meta:
         model = Package
         fields = ('filename', 'path', 'authors', 'comment',)

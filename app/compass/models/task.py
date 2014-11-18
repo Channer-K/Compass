@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from compass.utils import process
-from compass.conf import settings
 from compass.models import User, Module, Environment, Group
 from django.db import models
 from django.utils import timezone
@@ -104,7 +103,7 @@ class Task(models.Model):
     def get_stakeholders(self, exclude=[]):
         stakeholders = set([self.applicant, self.auditor])
 
-        SA_Group = Group.objects.get(pk=settings.SA_GID)
+        SA_Group = Group.objects.get(pk=2)
         SA_Leader = SA_Group.get_leader_role().user_set.all()[0]
 
         stakeholders.add(SA_Leader)

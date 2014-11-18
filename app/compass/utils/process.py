@@ -11,7 +11,9 @@ TPL_PATH = 'task/operate/'
 
 
 class TaskProcessingBase(object):
+
     """ Base class """
+
     def __init__(self, obj=None):
         self.obj = obj
         self.task = self.obj.task
@@ -28,7 +30,7 @@ class TaskProcessingBase(object):
         return
 
     def can_execute(self, subtask, user):
-        """ This must be overrided. """
+        """ This must be overridden. """
         if user.is_superuser:
             return True
         return False
@@ -51,7 +53,7 @@ class TaskProcessingBase(object):
         from compass.views import task_detail
         from django.core.urlresolvers import reverse
 
-        # re-read from database
+        # re-read the new value from database
         from compass.models import Subtask
         subtask = Subtask.objects.get(pk=self.obj.pk)
 
@@ -79,14 +81,16 @@ class TaskProcessingBase(object):
 
 
 class FailureAudit(TaskProcessingBase):
+
     """ 审核失败 """
+
     def get_status_in_failure(self):
         from compass.models import StatusControl
-        return StatusControl.objects.get(pk=settings.FailureAudit_Status)
+        return StatusControl.objects.get(pk=1)
 
     def run(self, request):
         from compass.models import StatusControl
-        failAudit = StatusControl.objects.get(pk=settings.FailureAudit_Status)
+        failAudit = StatusControl.objects.get(pk=1)
         self.task.subtask_set.update(status=failAudit)
 
         self.task.force_terminate(request.POST['info'])
@@ -112,7 +116,9 @@ class FailureAudit(TaskProcessingBase):
 
 
 class FailurePost(TaskProcessingBase):
+
     """ 发布失败 """
+
     def can_execute(self, subtask, user):
         if user.is_superuser:
             return True
@@ -124,7 +130,7 @@ class FailurePost(TaskProcessingBase):
 
     def run(self, request):
         from compass.models import StatusControl
-        failurePost = StatusControl.objects.get(pk=settings.FailurePost_Status)
+        failurePost = StatusControl.objects.get(pk=2)
         self.task.subtask_set.update(status=failurePost)
 
         self.task.force_terminate(request.POST['info'])
@@ -153,7 +159,9 @@ class FailurePost(TaskProcessingBase):
 
 
 class WaitingForAudit(TaskProcessingBase):
+
     """ 等待审核 """
+
     def can_execute(self, subtask, user):
         if user.is_superuser:
             return True
@@ -220,7 +228,9 @@ class WaitingForAudit(TaskProcessingBase):
 
 
 class SuccessPost(TaskProcessingBase):
+
     """ 发布成功 """
+
     def run(self, request):
         super(SuccessPost, self).run(request)
 
@@ -242,7 +252,9 @@ class SuccessPost(TaskProcessingBase):
 
 
 class WaitingForPost(TaskProcessingBase):
+
     """ 等待发布 """
+
     def can_execute(self, subtask, user):
         if (user.has_perm('compass.distribute_task') or
                 user == self.obj.assignee):
@@ -325,7 +337,9 @@ class WaitingForPost(TaskProcessingBase):
 
 
 class Planning(TaskProcessingBase):
+
     """ 计划发布 """
+
     def can_execute(self, subtask, user):
         if user.is_superuser:
             return True
@@ -397,7 +411,9 @@ class Planning(TaskProcessingBase):
 
 
 class Posting(TaskProcessingBase):
+
     """ 发布中 """
+
     def can_execute(self, subtask, user):
         if user.is_superuser:
             return True
@@ -450,7 +466,9 @@ class Posting(TaskProcessingBase):
 
 
 class Confirmation(TaskProcessingBase):
+
     """ 等待确认 """
+
     def can_execute(self, subtask, user):
         if user.is_superuser:
             return True

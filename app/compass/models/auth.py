@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import datetime
 from compass.utils import permissions
-from compass.conf import settings
 from django.core import validators
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
@@ -80,7 +79,7 @@ models.ForeignKey(
     related_name='children',
     verbose_name=_('parent'),
     help_text=_('The group\'s parent group. None, if it is a root node.')
-    ).contribute_to_class(Group, 'parent')
+).contribute_to_class(Group, 'parent')
 
 Group.get_leader_role = MethodType(get_leader_role, None, Group)
 
@@ -177,6 +176,7 @@ class MyPermissionsMixin(models.Model):
 
 
 class MyUserManager(BaseUserManager):
+
     def _create_user(self, username, email, password,
                      is_staff, is_superuser, **extra_fields):
         """
@@ -316,7 +316,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
         return self.get_user_tasks().filter(created_at__range=[start, end])
 
     def last_week_pub(self):
-        date = timezone.now().date()-datetime.timedelta(days=7)
+        date = timezone.now().date() - datetime.timedelta(days=7)
         start = date - datetime.timedelta(date.weekday())
         end = start + datetime.timedelta(7)
         return self.get_user_tasks().filter(created_at__range=[start, end])
@@ -378,7 +378,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     @property
     def is_in_SA(self):
         """ hard coding here """
-        SA_GROUP = Group.objects.get(pk=settings.SA_GID)
+        SA_GROUP = Group.objects.get(pk=2)
 
         if SA_GROUP in self.get_all_groups():
             return True
@@ -387,6 +387,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
 
 
 class User(MyAbstractUser):
+
     class Meta(MyAbstractUser.Meta):
         app_label = 'compass'
         swappable = 'AUTH_USER_MODEL'
