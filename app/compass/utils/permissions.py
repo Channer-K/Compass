@@ -28,8 +28,9 @@ def tasks_can_access(user):
     """
     Getting the tasks that login user has permission to access
 
-    1. User can access his subordinates' tasks when he is a leader in Dev.
-    2. User in SA can access those which be verified and qualified.
+    1. Those whose applicants are the subordinates of the user who is a
+       leader in Dev can accessible.
+    2. Those which be verified and qualified are accessible when user in SA.
     3. Those created by themselves are accessible if not meeting above
        conditions.
     """
