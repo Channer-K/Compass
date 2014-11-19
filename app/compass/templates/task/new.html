@@ -33,11 +33,7 @@
         <div class="form-group {% if form.modules.errors %}has-error{% endif %}">
           <label for="{{ form.modules.id_for_label }}" class="col-sm-2 control-label">{{ form.modules.label }}</label>
           <div class="col-sm-6">
-            {% for module in form.modules %}
-              <label for="{{module.id_for_label}}" class="checkbox-inline">
-                {{ module }}
-              </label>
-            {% endfor %}
+            {{ form.modules }}
             <span>{{ form.modules.errors }}</span>
           </div>
         </div>

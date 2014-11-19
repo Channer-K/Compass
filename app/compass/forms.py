@@ -301,7 +301,11 @@ class NewTaskForm(forms.ModelForm):
         super(NewTaskForm, self).__init__(*args, **kwargs)
 
         self.fields['modules'] = forms.MultipleChoiceField(
-            label=u'发布模块', widget=forms.CheckboxSelectMultiple(),
+            label=u'发布模块',
+            widget=forms.SelectMultiple(attrs={
+                'class': 'chosen-select',
+                'style': 'width: 482px',
+                'data-placeholder': 'Choose release modules...'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 
