@@ -262,7 +262,7 @@ input[type="checkbox"] { margin: 9px 0 0; }
 }
 .scrollDiv { overflow: scroll; height: 230px; }
 .mousescroll { width: auto; height: 255px; }
-.entrylist li {
+.entrylist > li {
   display: block;
   padding: 10px 20px;
   border-bottom: 1px solid #ddd;
@@ -278,17 +278,19 @@ input[type="checkbox"] { margin: 9px 0 0; }
 .entry_content h4 a:hover { color: #68768d; }
 .entry_content p { margin: 5px 0; font-size: 13px; }
 
+#detailed_content { margin-top: 20px; }
+
 /* Process Style */
 .process {
   list-style: none;
   display: inline-block;
   width: 100%;
+  margin-bottom: 10px;
 }
 .process li {
   float: left;
   width: 33%;
   padding: 10px 0;
-  margin-bottom: 30px;
 }
 .process li a { display: block; }
 .process li a:hover { text-decoration: none; }

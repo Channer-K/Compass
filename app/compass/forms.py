@@ -260,7 +260,10 @@ class FilterForm(forms.Form):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块',
-            widget=forms.CheckboxSelectMultiple(),
+            widget=forms.SelectMultiple(attrs={
+                'class': 'chosen-select',
+                'style': 'width: 300px',
+                'data-placeholder': 'Choose release modules...'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 

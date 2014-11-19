@@ -53,7 +53,10 @@
                  isdone="1" rel="1">
                 <span class="h2">Step 1</span>
                 <span class="dot"><span></span></span>
-                <span class="label">{{subtasks.0.environment.name}}</span>
+                <span class="label"
+                {% if subtasks.0 == latest.in_progress %}
+                      style="font-size: 17px;"
+                {% endif %}>{{subtasks.0.environment.name}}</span>
               </a>
             </li>
             <li>
@@ -69,7 +72,10 @@
                  isdone="1" rel="3">
                 <span class="h2">Step 2</span>
                 <span class="dot"><span></span></span>
-                <span class="label">{{subtasks.1.environment.name}}</span>
+                <span class="label" 
+                {% if subtasks.1 == latest.in_progress %}
+                      style="font-size: 17px;"
+                {% endif %}>{{subtasks.1.environment.name}}</span>
               </a>
             </li>
           </ul>
@@ -82,7 +88,10 @@
                  isdone="1" rel="{{forloop.counter}}">
                 <span class="h2">Step {{forloop.counter}}</span>
                 <span class="dot"><span></span></span>
-                <span class="label">{{subtask.environment.name}}</span>
+                <span class="label"
+                {% if subtask == latest.in_progress %}
+                      style="font-size: 17px;"
+                {% endif %}>{{subtask.environment.name}}</span>
               </a>
             </li>
             {% endfor %}

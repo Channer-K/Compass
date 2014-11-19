@@ -27,9 +27,7 @@
                 {{form.modules.label}}
               </label>
               <div class="col-sm-8">
-                {% for module in form.modules %}
-                  <label class="checkbox-inline">{{module.tag}}{{ module.choice_label }}</label>
-                {% endfor %}
+                {{form.modules}}
               </div>
             </div>
           </div>
