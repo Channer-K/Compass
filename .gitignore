@@ -10,10 +10,12 @@ Thumbs.db
 *.log
 
 app/app/
+app/static/
+app/node_modules/
 app/compass/snapshots/
 app/compass/upload/
 app/compass/fixtures/
-app/static/
+
 venv/
 
 *.pyc

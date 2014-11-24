@@ -91,17 +91,17 @@ class MyGroupAdmin(MPTTModelAdmin):
     filter_horizontal = ('permissions',)
 
 
-class RoleChangeForm(forms.ModelForm):
+class HorizontalRadioRenderer(forms.RadioSelect.renderer):
+    def render(self):
+        from django.utils.safestring import mark_safe
 
-    class Meta:
-        model = models.Role
-        fields = ('name', 'group', 'superior', 'permissions',)
+        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
-class RoleCreationForm(forms.ModelForm):
-    is_leader = forms.ChoiceField(label=u'职位类型',
-                                  choices=((0, 'Staff'), (1, 'Leader'),),
-                                  initial=0, widget=forms.RadioSelect)
+class RoleForm(forms.ModelForm):
+    is_leader = forms.ChoiceField(
+        label=u'职位类型', choices=((0, 'Staff'), (1, 'Leader'),),
+        initial=0, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer))
 
     class Meta:
         model = models.Role
@@ -109,11 +109,17 @@ class RoleCreationForm(forms.ModelForm):
 
 
 class RoleAdmin(admin.ModelAdmin):
-    form = RoleChangeForm
-    add_form = RoleCreationForm
+    form = RoleForm
 
     list_display = ('name', 'group', 'superior', 'is_leader')
     filter_horizontal = ('permissions',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        form = super(RoleAdmin, self).get_form(request, obj=None, **kwargs)
+        if obj:
+            form.base_fields['is_leader'].initial = obj.is_leader
+
+        return form
 
 
 class ModuleAdmin(admin.ModelAdmin):

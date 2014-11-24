@@ -162,7 +162,10 @@
     $(".del-pack").click(function(){return deleteForm(this, "form");});
     $('#filter').click(function(){$('#filter-form').submit();});
     $('#reset_id').click(function(){$('#info_id').val('');});
-    $(".chosen-select").chosen({no_results_text: "Oops, nothing found!"}); 
+    $(".chosen-select").chosen({
+      no_results_text: "Oops, nothing found!",
+      placeholder_text_multiple: " "
+    }); 
 
     $('#filter-btn').click(function(evt){
       evt.preventDefault();

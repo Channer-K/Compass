@@ -15,8 +15,8 @@ CONTENT_TYPES = [
     'application/msword', 'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'application/zip', 'application/x-tar', 'application/x-rar-compressed',
-    'application/x-gzip'
+    'application/zip', 'application/x-gzip',
+    'application/x-tar', 'application/x-rar-compressed'
 ]
 
 # Specify a max value for the size of uploaded file

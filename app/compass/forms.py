@@ -134,16 +134,15 @@ class ReplyForm(forms.Form):
     subject = forms.CharField(
         label=u'标题', max_length=50,
         widget=forms.TextInput(attrs={'class': 'form-control'}))
-    content = forms.CharField(
-        label=u'内容',
-        widget=forms.Textarea(attrs={'class': 'form-control', 'rows': 5}))
+    content = forms.CharField(label=u'内容', widget=forms.Textarea(
+        attrs={'class': 'form-control', 'rows': 5}))
     uploaded_file = MultiFileField(max_num=10, min_num=0,
                                    maximum_file_size=settings.MAX_UPLOAD_SIZE)
 
 
 class ProfileForm(forms.Form):
     error_messages = {
-        'password_incorrect': _("Your old password was entered incorrectly. "
+        'password_incorrect': _("Your old password is incorrect. "
                                 "Please enter it again."),
         'password_mismatch': _("The two password fields didn't match."),
         'password_same': _("Your old and new password are the same."
@@ -223,7 +222,7 @@ class ProfileForm(forms.Form):
         email = self.cleaned_data['email']
         if "@pset.suntec.net" not in email:
             raise forms.ValidationError(
-                "Email address must end with @pset.suntec.net")
+                "You can only use @pset.suntec.net Email.")
         return email
 
     def save(self, commit=True):
@@ -260,10 +259,8 @@ class FilterForm(forms.Form):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块',
-            widget=forms.SelectMultiple(attrs={
-                'class': 'chosen-select',
-                'style': 'width: 300px',
-                'data-placeholder': 'Choose release modules...'}),
+            widget=forms.SelectMultiple(attrs={'class': 'chosen-select',
+                                               'style': 'width: 300px'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 
@@ -302,10 +299,8 @@ class NewTaskForm(forms.ModelForm):
 
         self.fields['modules'] = forms.MultipleChoiceField(
             label=u'发布模块',
-            widget=forms.SelectMultiple(attrs={
-                'class': 'chosen-select',
-                'style': 'width: 482px',
-                'data-placeholder': 'Choose release modules...'}),
+            widget=forms.SelectMultiple(attrs={'class': 'chosen-select',
+                                               'style': 'width: 482px'}),
             choices=[(module.pk, module.name) for module
                      in modules_can_access(self.user_cache)])
 
