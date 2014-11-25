@@ -5,7 +5,7 @@ Django settings for app project.
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-from django.conf import *
+from .settings_default import *
 PROJECT_DIR = os.path.join(BASE_DIR, 'compass')
 
 
