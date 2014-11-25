@@ -1,0 +1,70 @@
+[
+{
+    "model": "auth.group",
+    "pk": 4,
+    "fields": {
+      "name": "Dev-Novisocial",
+      "parent": 3,
+      "lft": 2,
+      "rght": 3,
+      "tree_id": 3,
+      "level": 1
+    }
+},
+{
+    "model": "auth.group",
+    "pk": 5,
+    "fields": {
+      "name": "Dev-intern",
+      "parent": 3,
+      "lft": 4,
+      "rght": 5,
+      "tree_id": 3,
+      "level": 1
+    }
+},
+{
+    "model": "auth.group",
+    "pk": 6,
+    "fields": {
+      "name": "Dev-Notification",
+      "parent": 3,
+      "lft": 6,
+      "rght": 7,
+      "tree_id": 3,
+      "level": 1
+    }
+},
+{
+    "model": "compass.module",
+    "pk": 1,
+    "fields": {
+      "name": "Novisocial",
+      "group": 4
+    }
+},
+{
+    "model": "compass.module",
+    "pk": 2,
+    "fields": {
+      "name": "Notification",
+      "group": 6
+    }
+},
+{
+    "model": "compass.module",
+    "pk": 3,
+    "fields": {
+      "name": "Notify",
+      "group": 6
+    }
+},
+{
+    "model": "compass.module",
+    "pk": 4,
+    "fields": {
+      "name": "test",
+      "group": 5
+    }
+}
+]
