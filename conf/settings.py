@@ -5,7 +5,7 @@ You can override any definitions accordingly.
 """
 
 # Used by building the full URL in email templates.
-DOMAIN = "172.26.184.26:8888"
+DOMAIN = "172.26.184.26:8887"
 
 # The following extensions of the uploaded files in replies are allowed.
 CONTENT_TYPES = [
