@@ -22,8 +22,6 @@ CONTENT_TYPES = [
 # Specify a max value for the size of uploaded file
 MAX_UPLOAD_SIZE = 1024*1024*20
 
-SYSTEM_EMAIL = 'gengqiangle@pset.suntec.net'
-
 # Set the audit operation time-out period in seconds.
 Audit_TimeOut = 60*60*2
 

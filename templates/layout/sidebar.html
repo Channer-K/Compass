@@ -1,0 +1,18 @@
+{% url 'index' as index %}
+{% url 'tasks' as tasks %}
+<div class="col-sm-3 col-md-2 sidebar">
+  <ul class="nav nav-sidebar" id="side-menu">
+    <li {% if request.path == index %}class="active"{% endif %}><a href="{% url 'index' %}">Overview</a></li>
+    <li {% if request.path == tasks %}class="active"{% endif %}>
+      <a href="">Tasks</a>
+        <ul class="nav nav-second-level">
+          <li><a {% if request.GET.category == 'all' %}class="active"{% endif %} href="{% url 'tasks' %}?category=all">全部任务</a>
+          </li>
+          <li><a {% if request.GET.category == 'relative' %}class="active"{% endif %} href="{% url 'tasks' %}?category=relative">当前与我相关的</a>
+          </li>
+          <li><a {% if request.GET.category == 'ongoing' %}class="active"{% endif %} href="{% url 'tasks' %}?category=ongoing">正在进行的</a></li>
+          <li><a {% if request.GET.category == 'finished' %}class="active"{% endif %} href="{% url 'tasks' %}?category=finished">已经结束的</a></li>
+        </ul>
+    </li>
+  </ul>
+</div>
