@@ -1,0 +1,110 @@
+{% extends "layout/base.html" %}
+{% load compass_tags %}
+{% block content %}
+<h1 class="page-header">Tasks</h1>
+<div class="contentwrapper">
+  <div class="contenttitle">
+    <h3>Filter</h3>
+  </div>
+  <div class="formContainer">
+    <form id="filter-form" role='form' class="form-horizontal" method="get" accept-charset="utf-8">
+        {% csrf_token %}
+        <div class="contentwrapper">
+          <div class="subcontent">
+            <div class="form-group">
+              <label class="col-sm-2 control-label">申请时间:</label>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" name="from" id="id_from_date" value="{{request.GET.from}}">
+                <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
+              </div>
+              <div class="col-sm-4">
+                <input type="text" class="form-control" name="to" id="id_to_date" value="{{request.GET.to}}">
+                <span class="input-icon fui-calendar-solid" style="right: 18px;"></span>
+              </div>
+            </div>
+            <div class="form-group">
+              <label for="{{ form.modules.id_for_label }}" class="col-sm-2 control-label">
+                {{form.modules.label}}
+              </label>
+              <div class="col-sm-8">
+                {{form.modules}}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="actionBar">
+          {% if perms.compass.add_task %}
+            <a href="{% url 'new-task' %}" class="btn btn-primary btn-sm" style="float: right; margin-left: 5px;">New Task</a>
+          {% endif %}
+          <button id="filter-btn" type="submit" class="btn btn-success btn-sm" style="float: right; margin-left: 5px;">Search</button>
+        </div>
+    </form>
+  </div>
+  <div class="contenttitle">
+    <h3>Task List</h3>
+  </div>
+  {% if tasks %}
+    {% for task in tasks %}
+      <div class="panel-group" id="accordion{{forloop.counter}}">
+      <div class="panel panel-default">
+        <div class="panel-heading {% if task.in_progress.status.mark > 0 %}panel-success{% elif task.in_progress.status.mark < 0 %}panel-failure{% endif %}">
+          <h4 class="panel-title">
+            <a data-toggle="collapse" data-parent="#accordion{{forloop.counter}}" href="#collapse{{forloop.counter}}">
+              {{task.amendment}} - {{task.version}} - {{task.created_at|get_due_date_string}}
+            </a>
+          </h4>
+        </div>
+        <div id="collapse{{forloop.counter}}" class="panel-collapse collapse {% if task.editable %}in{% endif %}">
+          <div class="panel-body">
+            <div class="row">
+              <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
+              <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at|date:"SHORT_DATETIME_FORMAT"}}</span></p>
+            </div>
+            <div class="row">
+              <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
+              <p class="col-md-6"><b>发布模块：</b><span>{{task.get_all_modules|join:" | "}}</span></p>
+            </div>
+            <div class="row">
+              <p class="col-md-6"><b>发布情况：</b><span>{{task.in_progress.status.name}}{% if task.info %}（{{task.info}}）{% endif %}</span></p>
+              <p class="col-md-6"><b>发布日期：</b><span>{{task.in_progress.pub_date|date:"SHORT_DATETIME_FORMAT"|default:"待定"}}</span></p>
+            </div>
+            <div class="row">
+              <p class="col-md-6"><b>当前发布：</b><span>{{task.in_progress.environment.name}}</span>
+              <p class="col-md-6"><b>确认人：</b><span>{{task.auditor}}</span></p>
+            </div>
+            <p><b>备注</b>：
+            <p>{{task.comment|default:"无"|ellipses:120}}</p>
+            <p><a href="{%url 'detail' tid=task.pk sid=task.in_progress.pk %}">查看详情</a></p>
+          </div>
+        </div>
+      </div>
+      </div>
+    {% endfor %}
+  {% else %}
+  <div>任务列表为空</div>
+  {% endif %}
+  {% if tasks.paginator.num_pages > 1 %}
+  <div class="panel-group" style="text-align: center;">
+    <div class="pagination">
+      <ul>
+      {% if tasks.has_previous %}
+        <li class="previous">
+          <a href="{% add_get page=tasks.previous_page_number %}" class="fui-arrow-left"></a>
+        </li>
+        {% endif %}
+        {% for page in tasks.paginator.page_range %}
+          <li {% ifequal page tasks.number %}class="active"{% endifequal %}>
+            <a href="{% add_get page=page %}">{{page}}</a>
+          </li>
+        {% endfor %}
+        {% if tasks.has_next %}
+        <li class="next">
+          <a href="{% add_get page=tasks.next_page_number %}" class="fui-arrow-right"></a>
+        </li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
