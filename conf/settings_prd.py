@@ -63,8 +63,8 @@ STATICFILES_DIRS = (
     )
 
 STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
-PIPELINE_YUGLIFY_BINARY = os.path.join(BASE_DIR,
-                                       'node_modules/yuglify/bin/yuglify')
+PIPELINE_CSS_COMPRESSOR = 'pipeline.compressors.NoopCompressor'
+PIPELINE_JS_COMPRESSOR = 'pipeline.compressors.NoopCompressor'
 
 PIPELINE_CSS = {
     'master': {
