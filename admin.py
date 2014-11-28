@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from compass import models
 from django import forms
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
@@ -6,7 +7,6 @@ from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import Group
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.utils.translation import ugettext as _
-from compass import models
 
 
 class UserCreationForm(forms.ModelForm):
@@ -99,9 +99,6 @@ class HorizontalRadioRenderer(forms.RadioSelect.renderer):
 
 
 class RoleForm(forms.ModelForm):
-    is_leader = forms.ChoiceField(
-        label=u'职位类型', choices=((0, 'Staff'), (1, 'Leader'),),
-        initial=0, widget=forms.RadioSelect(renderer=HorizontalRadioRenderer))
 
     class Meta:
         model = models.Role
@@ -111,8 +108,9 @@ class RoleForm(forms.ModelForm):
 class RoleAdmin(admin.ModelAdmin):
     form = RoleForm
 
-    list_display = ('name', 'group', 'superior', 'is_leader')
+    list_filter = ('group',)
     filter_horizontal = ('permissions',)
+    list_display = ('name', 'group', 'superior', 'is_leader')
 
     def get_form(self, request, obj=None, **kwargs):
         form = super(RoleAdmin, self).get_form(request, obj=None, **kwargs)
@@ -123,7 +121,7 @@ class RoleAdmin(admin.ModelAdmin):
 
 
 class ModuleAdmin(admin.ModelAdmin):
-
+    list_filter = ('group',)
     list_display = ('name', 'group')
 
 

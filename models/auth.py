@@ -98,7 +98,7 @@ class Role(models.Model):
                               related_query_name='role')
     is_leader = models.BooleanField(
         _('leader'), default=False,
-        help_text=_('Designates that this role is leader or just staff.'))
+        help_text=_('Designates that this role is a leader or just a staff.'))
     permissions = models.ManyToManyField(
         Permission, blank=True,
         verbose_name=_('permissions'))
