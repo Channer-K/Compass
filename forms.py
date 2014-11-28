@@ -56,6 +56,13 @@ class SigninForm(forms.Form):
             elif not self.user_cache.is_active:
                 raise forms.ValidationError(self.error_messages['inactive'],
                                             code='inactive',)
+            elif self.user_cache.is_superuser:
+                raise forms.ValidationError(
+                    self.error_messages['invalid_login'],
+                    code='invalid_login',
+                    params={'username': self.username_field.verbose_name},
+                )
+
         return self.cleaned_data
 
     def get_user_id(self):

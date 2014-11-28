@@ -51,7 +51,7 @@ def modules_can_access(user):
     """
     Getting the visitable modules by the way of top-down.
     """
-    if user.is_superuser or user.is_in_SA:
+    if user.is_in_SA:
         from compass.models import Module
         return Module.objects.all()
 

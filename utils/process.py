@@ -30,9 +30,6 @@ class TaskProcessingBase(object):
         return
 
     def can_execute(self, subtask, user):
-        """ This must be overridden. """
-        if user.is_superuser:
-            return True
         return False
 
     def extra_context(self, requset):
@@ -120,8 +117,6 @@ class FailurePost(TaskProcessingBase):
     """ 发布失败 """
 
     def can_execute(self, subtask, user):
-        if user.is_superuser:
-            return True
         if (user.has_perm('compass.forcing_close') or
                 self.obj.assignee == user):
             return True
@@ -163,8 +158,6 @@ class WaitingForAudit(TaskProcessingBase):
     """ 等待审核 """
 
     def can_execute(self, subtask, user):
-        if user.is_superuser:
-            return True
         if (user.has_perm('compass.audit_task') and self.task.auditor == user):
             return True
 
@@ -341,8 +334,6 @@ class Planning(TaskProcessingBase):
     """ 计划发布 """
 
     def can_execute(self, subtask, user):
-        if user.is_superuser:
-            return True
         if (user.is_in_SA and user.is_leader) or self.obj.assignee == user:
             return True
 
@@ -415,9 +406,6 @@ class Posting(TaskProcessingBase):
     """ 发布中 """
 
     def can_execute(self, subtask, user):
-        if user.is_superuser:
-            return True
-
         if user.is_in_SA and user == self.obj.assignee:
             return True
 
@@ -470,9 +458,6 @@ class Confirmation(TaskProcessingBase):
     """ 等待确认 """
 
     def can_execute(self, subtask, user):
-        if user.is_superuser:
-            return True
-
         if user == self.task.applicant or user == subtask.assignee:
             return True
 

@@ -98,7 +98,7 @@ class Role(models.Model):
                               related_query_name='role')
     is_leader = models.BooleanField(
         _('leader'), default=False,
-        help_text=_('Designates that this role is leader or just staff.'))
+        help_text=_('Designates that this role is a leader or just a staff.'))
     permissions = models.ManyToManyField(
         Permission, blank=True,
         verbose_name=_('permissions'))
@@ -378,7 +378,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     @property
     def is_in_SA(self):
         """ hard coding here """
-        SA_GROUP = Group.objects.get(pk=2)
+        SA_GROUP = Group.objects.get(pk=1)
 
         if SA_GROUP in self.get_all_groups():
             return True

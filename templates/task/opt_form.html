@@ -3,7 +3,7 @@
   {{req_task.render_html}}
 </form>
 
-{% if user.is_superuser or perms.compass.terminate_task and req_task.editable  %}
+{% if perms.compass.terminate_task and req_task.editable  %}
   <button class="btn btn-warning btn-small" data-toggle="modal" data-target="#myModal">
       撤销发布
   </button>
