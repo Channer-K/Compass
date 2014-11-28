@@ -24,9 +24,6 @@ class ServerGroup(models.Model):
 
     class Meta:
         app_label = 'compass'
-        permissions = (
-            ('can_view_server_group', 'Can view ServerGroup'),
-            )
 
     def __unicode__(self):
         return u'<%s -- %s>' % (self.name, self.environment)
@@ -37,6 +34,7 @@ class Server(models.Model):
     ip = models.IPAddressField()
     groups = models.ManyToManyField(
         ServerGroup,
+        null=True, blank=True,
         verbose_name=_('server groups'),
         help_text=_('Which groups server in.'))
     is_active = models.BooleanField(default=True)

@@ -378,7 +378,7 @@ class MyAbstractUser(AbstractBaseUser, MyPermissionsMixin):
     @property
     def is_in_SA(self):
         """ hard coding here """
-        SA_GROUP = Group.objects.get(pk=2)
+        SA_GROUP = Group.objects.get(pk=1)
 
         if SA_GROUP in self.get_all_groups():
             return True
