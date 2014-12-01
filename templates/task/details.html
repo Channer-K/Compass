@@ -54,7 +54,7 @@
   <div id="detailed_content" class="content">
     <div class="row">
       <p class="col-md-6"><b>申请人：</b><span>{{task.applicant}}</span></p>
-      <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at|date:"SHORT_DATETIME_FORMAT"}}</span></p>
+      <p class="col-md-6"><b>申请时间：</b><span>{{task.created_at|date:"Y-m-d P"}}</span></p>
     </div>
     <div class="row">
       <p class="col-md-6"><b>发布版本：</b><span>{{task.version}}</span></p>
@@ -68,7 +68,7 @@
     </div>
     <div class="row">
       <p class="col-md-6"><b>发布人：</b><span>{{req_step.assignee|default:"未指定"}}</span></p>
-      <p class="col-md-6"><b>发布日期：</b><span>{{req_step.pub_date|date:"SHORT_DATETIME_FORMAT"|default:"待定"}}</span></p>
+      <p class="col-md-6"><b>发布日期：</b><span>{{req_step.pub_date|date:"Y-m-d P"|default:"待定"}}</span></p>
     </div>
     <p><b>确认人：</b><span>{{task.auditor}}</span></p>
     <p><b>修改说明：</b>

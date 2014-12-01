@@ -62,8 +62,11 @@ class TaskProcessingBase(object):
             url = urlparse("http://" + settings.DOMAIN + "/history/" +
                            self.obj.url_token + ".html").geturl()
 
-        ctx = {'url': url, 'at_time': self.task.updated_at,
-               'username': self.task.applicant}
+        ctx = {
+            'url': url,
+            'at_time': self.task.updated_at.strftime("%Y-%m-%d %I:%M%p"),
+            'username': self.task.applicant
+        }
 
         if extra_context is not None:
             ctx.update(extra_context)
@@ -386,10 +389,12 @@ class Planning(TaskProcessingBase):
 
         to = [user.email for user in self.task.get_stakeholders()]
 
-        extra_context = {'username': self.obj.assignee,
-                         'at_time': self.obj.pub_date,
-                         'task_title': self.task.amendment,
-                         'version': self.task.version}
+        extra_context = {
+            'username': self.obj.assignee,
+            'at_time': self.obj.pub_date.strftime("%Y-%m-%d %I:%M%p"),
+            'task_title': self.task.amendment,
+            'version': self.task.version
+        }
 
         super(Planning, self).send_mail(request, subject=subject, to=to,
                                         template_name=template_name,
@@ -438,10 +443,12 @@ class Posting(TaskProcessingBase):
 
         to = [user.email for user in self.task.get_stakeholders()]
 
-        extra_context = {'username': self.obj.assignee,
-                         'at_time': self.obj.pub_date,
-                         'task_title': self.task.amendment,
-                         'version': self.task.version}
+        extra_context = {
+            'username': self.obj.assignee,
+            'at_time': self.obj.pub_date.strftime("%Y-%m-%d %I:%M%p"),
+            'task_title': self.task.amendment,
+            'version': self.task.version
+            }
 
         super(Posting, self).send_mail(request, subject=subject, to=to,
                                        template_name=template_name,
