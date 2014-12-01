@@ -138,7 +138,7 @@ class FailurePost(TaskProcessingBase):
 
     def send_email(self, request):
         subject = u'【失败】' + self.task.amendment
-        to = list([user.email for user in self.task.get_stakeholders()])
+        to = [user.email for user in self.task.get_stakeholders()]
 
         if self.obj.assignee is not None:
             to.append(self.obj.assignee.email)
@@ -314,7 +314,7 @@ class WaitingForPost(TaskProcessingBase):
         recipients = self.task.get_stakeholders(exclude=[self.task.applicant,
                                                          self.task.auditor])
 
-        to = list([user.email for user in recipients])
+        to = [user.email for user in recipients]
 
         extra_context = {'task_title': self.task.amendment,
                          'version': self.task.version}
@@ -384,7 +384,7 @@ class Planning(TaskProcessingBase):
         template_name = 'planning'
         subject = u'【计划发布】' + self.task.amendment
 
-        to = [self.task.applicant.email, self.obj.assignee.email]
+        to = [user.email for user in self.task.get_stakeholders()]
 
         extra_context = {'username': self.obj.assignee,
                          'at_time': self.obj.pub_date,
@@ -436,7 +436,7 @@ class Posting(TaskProcessingBase):
         template_name = 'posting'
         subject = u'【正在发布】' + self.task.amendment
 
-        to = list([user.email for user in self.task.get_stakeholders()])
+        to = [user.email for user in self.task.get_stakeholders()]
 
         extra_context = {'username': self.obj.assignee,
                          'at_time': self.obj.pub_date,
