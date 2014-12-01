@@ -33,10 +33,7 @@ def signout(request):
 @login_required
 def index(request):
     tasks = permissions.tasks_can_access(request.user)
-<<<<<<< HEAD:app/compass/views.py
-=======
     active_tasks = get_active_tasks(request.user, tasks)
->>>>>>> dev:views.py
     approvals = tasks.filter(available=False,
                              editable=True,
                              auditor=request.user)
@@ -218,10 +215,6 @@ def new_task(request):
             scls = task.in_progress().get_ctrl_cls()
             if scls:
                 to = None if task.available else [task.auditor.email]
-<<<<<<< HEAD:app/compass/views.py
-
-=======
->>>>>>> dev:views.py
                 scls.send_email(request, to=to)
 
             messages.success(request,
