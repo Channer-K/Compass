@@ -4,7 +4,6 @@ from django import forms
 from django.contrib import admin
 from mptt.admin import MPTTModelAdmin
 from django.contrib.auth.admin import UserAdmin
-from django.contrib.auth.models import Group
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
 from django.utils.translation import ugettext as _
 
@@ -15,11 +14,10 @@ class UserCreationForm(forms.ModelForm):
         label='Password confirmation', widget=forms.PasswordInput)
     email = forms.EmailField(
         label='Email Address',
-        widget=forms.EmailInput(attrs={'placeholder': '@pset.suntec.net'}))
+        widget=forms.EmailInput(attrs={'value': '@pset.suntec.net'}))
 
     class Meta:
         model = models.User
-        fields = ('email',)
 
     def clean_username(self):
         username = self.cleaned_data.get('username').lower()
@@ -64,13 +62,17 @@ class MyUserAdmin(UserAdmin):
         (None, {'fields': ('username', 'password')}),
         (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
         (_('Permissions'), {
-            'fields': ('is_active', 'groups', 'roles', 'user_permissions')
+            'fields': ('is_active', 'is_staff', 'groups', 'roles',
+                       'user_permissions')
             }),
         (_('Important dates'), {'fields': ('last_login', 'created_at')}),
     )
     add_fieldsets = (
         (None, {'classes': ('wide',),
-                'fields': ('username', 'password1', 'password2', 'email')}),
+                'fields': ('username', 'password1', 'password2')}),
+        (_('Personal info'), {'fields': ('first_name', 'last_name', 'email')}),
+        (_('Permissions'), {
+            'fields': ('is_active', 'is_staff', 'groups', 'roles',)}),
     )
     list_display = ('username', 'email', 'first_name', 'last_name',
                     'in_groups', 'is_staff')
@@ -85,17 +87,50 @@ class MyUserAdmin(UserAdmin):
     def in_groups(self, obj):
         return ", ".join([p.name for p in obj.groups.all()])
 
+    def get_queryset(self, request):
+        qs = super(MyUserAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(pk__in=[
+                u.pk for u in request.user.get_subordinate_users()])
+
+    def save_model(self, request, obj, form, change):
+        obj.save()
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'groups' and not request.user.is_superuser:
+            kwargs['queryset'] = models.Group.objects.filter(pk__in=[
+                g.pk for g in request.user.get_subordinate_groups()])
+        elif db_field.name == 'roles' and not request.user.is_superuser:
+            kwargs['queryset'] = models.Role.objects.filter(group__in=list(
+                request.user.get_subordinate_groups()))
+
+        return super(MyUserAdmin, self).formfield_for_manytomany(
+            db_field, request, **kwargs)
+
+    # Override relative response_add function in UserAdmin class.
+    def response_add(self, request, obj, post_url_continue=None):
+        return super(UserAdmin, self).response_add(
+            request, obj, post_url_continue=None)
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        elif not obj and request.user.is_leader:
+            return True
+        elif obj in request.user.get_subordinate_users():
+            return True
+
+        return False
+
+    has_delete_permission = has_change_permission
+    has_add_permission = has_change_permission
+
 
 class MyGroupAdmin(MPTTModelAdmin):
     fields = ('name', 'parent', 'permissions',)
     filter_horizontal = ('permissions',)
-
-
-class HorizontalRadioRenderer(forms.RadioSelect.renderer):
-    def render(self):
-        from django.utils.safestring import mark_safe
-
-        return mark_safe(u'\n'.join([u'%s\n' % w for w in self]))
 
 
 class RoleForm(forms.ModelForm):
@@ -124,6 +159,38 @@ class ModuleAdmin(admin.ModelAdmin):
     list_filter = ('group',)
     list_display = ('name', 'group')
 
+    def get_queryset(self, request):
+        qs = super(ModuleAdmin, self).get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        else:
+            return qs.filter(group__in=[
+                g for g in request.user.get_subordinate_groups()])
+
+    def save_model(self, request, obj, form, change):
+        obj.save()
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if db_field.name == 'group' and not request.user.is_superuser:
+            kwargs['queryset'] = models.Group.objects.filter(pk__in=[
+                g.pk for g in request.user.get_subordinate_groups()])
+
+        return super(ModuleAdmin, self).formfield_for_foreignkey(
+            db_field, request, **kwargs)
+
+    def has_change_permission(self, request, obj=None):
+        if request.user.is_superuser:
+            return True
+        elif not obj and request.user.is_leader:
+            return True
+        elif obj.group in request.user.get_subordinate_groups():
+            return True
+
+        return False
+
+    has_delete_permission = has_change_permission
+    has_add_permission = has_change_permission
+
 
 class ServerAdmin(admin.ModelAdmin):
     list_display = ('hostname', 'ip', 'is_active', 'comment')
@@ -134,56 +201,11 @@ class ServerGroupAdmin(admin.ModelAdmin):
     list_display = ('name', 'environment', 'comment')
 
 
-class PackageInline(admin.TabularInline):
-    fk_name = 'task'
-    fields = ('filename', 'path', 'authors', 'comment',)
-    exclude = ('created_at', 'is_published',)
-    model = models.Package
-    extra = 1
-
-
-class TaskForm(forms.ModelForm):
-    environment = forms.ModelMultipleChoiceField(
-        label=u'发布环境',
-        widget=forms.CheckboxSelectMultiple,
-        queryset=models.Environment.objects.all())
-
-    class Meta:
-        model = models.Task
-
-
-class TaskAdmin(admin.ModelAdmin):
-    form = TaskForm
-    list_display = ('modules_list', 'version', 'created_at',)
-    filter_horizontal = ('modules',)
-    inlines = [PackageInline]
-
-    def get_form(self, request, obj=None, **kwargs):
-        # Proper kwargs are form, fields, exclude, formfield_callback
-        if obj:
-            self.readonly_fields = ['applicant', 'created_at']
-        else:
-            kwargs['exclude'] = ['accept_group', 'applicant', 'created_at']
-        return super(TaskAdmin, self).get_form(request, obj, **kwargs)
-
-    def save_model(self, request, obj, form, change):
-        if not change:
-            obj.applicant = request.user
-            obj.save()
-            for env in request.POST.getlist('environment'):
-                env_obj = models.Environment.objects.get(pk=env)
-                models.Subtask.objects.create(task=obj, environment=env_obj)
-
-    def modules_list(self, obj):
-        return ", ".join([p.name for p in obj.modules.all()])
-
-
-admin.site.unregister(Group)
+admin.site.unregister(models.Group)
 admin.site.register(models.User, MyUserAdmin)
-admin.site.register(Group, MyGroupAdmin)
+admin.site.register(models.Group, MyGroupAdmin)
 admin.site.register(models.Server, ServerAdmin)
 admin.site.register(models.Environment)
 admin.site.register(models.ServerGroup, ServerGroupAdmin)
 admin.site.register(models.Module, ModuleAdmin)
 admin.site.register(models.Role, RoleAdmin)
-# admin.site.register(models.Task, TaskAdmin)
