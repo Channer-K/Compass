@@ -17,7 +17,6 @@ class TaskProcessingBase(object):
     def __init__(self, obj=None):
         self.obj = obj
         self.task = self.obj.task
-        self.render_id = '%s_%s' % ('sub', self.obj.pk)
 
     def run(self, request):
         _next_status = self.obj.status.next
