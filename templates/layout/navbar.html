@@ -3,7 +3,11 @@
     <div class="navbar-header">
       <a class="navbar-brand" href="{% url 'index' %}">Compass</a>
     </div>
-    <p class="navbar-text">Hello, {{ user }}</p>
+    <p class="navbar-text">
+    {% if not type == 'snapshot' %}
+      Hello, {{ user }}
+    {% endif %}
+    </p>
     <div class="navbar-collapse collapse">
       <ul class="nav navbar-nav navbar-right">
         <li><a href="{% url 'profile' %}">Profile</a></li>

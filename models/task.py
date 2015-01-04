@@ -203,7 +203,7 @@ class Subtask(models.Model):
         except ValueError:
             pass
 
-        context = {'task': self.task, 'req_step': self}
+        context = {'task': self.task, 'req_step': self, 'type': 'snapshot'}
 
         from django.template import RequestContext
         from django.template.loader import render_to_string
