@@ -146,20 +146,44 @@ def tasks(request):
         task_list = all_tasks
 
     # Search Query
-    date_from_str, date_to_str = request.GET.get('from'), request.GET.get('to')
+    af_date_str, at_date_str = request.GET.get('af'), request.GET.get('at')
+    pf_date_str, pt_date_str = request.GET.get('pf'), request.GET.get('pt')
     mids = request.GET.getlist('modules')
 
     import datetime
-    if date_from_str:
-        f_date = datetime.datetime.strptime(date_from_str, "%m/%d/%Y")
-        task_list = task_list.filter(created_at__gte=f_date)
+    # search tasks based on applying date
+    if af_date_str:
+        af_date = datetime.datetime.strptime(af_date_str, "%m/%d/%Y")
+        task_list = task_list.filter(created_at__gte=af_date)
 
-    if date_to_str:
-        t_date = datetime.datetime.strptime(date_to_str, "%m/%d/%Y") + \
+    if at_date_str:
+        at_date = datetime.datetime.strptime(at_date_str, "%m/%d/%Y") + \
             datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
 
-        task_list = task_list.filter(created_at__lte=t_date)
+        task_list = task_list.filter(created_at__lte=at_date)
 
+    # search tasks based on publishing date
+    if pf_date_str:
+        pf_date = datetime.datetime.strptime(pf_date_str, "%m/%d/%Y")
+        ids = []
+        for task in task_list:
+            if task.subtask_set.filter(pub_date__gte=pf_date):
+                ids.append(task.pk)
+
+        task_list = task_list.filter(pk__in=ids)
+
+    if pt_date_str:
+        pt_date = datetime.datetime.strptime(pt_date_str, "%m/%d/%Y") + \
+            datetime.timedelta(days=1) - datetime.timedelta(seconds=1)
+
+        ids = []
+        for task in task_list:
+            if task.subtask_set.filter(pub_date__lte=pt_date):
+                ids.append(task.pk)
+
+        task_list = task_list.filter(pk__in=ids)
+
+    # based on modules
     modules = []
     if mids:
         modules.extend(models.Module.objects.filter(id__in=mids))

@@ -31,15 +31,26 @@
 
   $('.reply .wrap-reply:last').addClass("last");
 
-  $("#id_from_date").datepicker({
+  $("#id_af_date").datepicker({
     onSelect:function(dateText,inst){
-      $("#id_to_date").datepicker("option","minDate",dateText);
+      $("#id_at_date").datepicker("option","minDate",dateText);
     }
   });
 
-  $("#id_to_date").datepicker({
+  $("#id_at_date").datepicker({
     onSelect:function(dateText,inst){
-      $("#id_from_date").datepicker("option","maxDate",dateText);
+      $("#id_af_date").datepicker("option","maxDate",dateText);
+    }
+  });
+  $("#id_pf_date").datepicker({
+    onSelect:function(dateText,inst){
+      $("#id_pt_date").datepicker("option","minDate",dateText);
+    }
+  });
+
+  $("#id_pt_date").datepicker({
+    onSelect:function(dateText,inst){
+      $("#id_pf_date").datepicker("option","maxDate",dateText);
     }
   });
 
